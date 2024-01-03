@@ -21,6 +21,14 @@ import (
 // pass the data to a WebhookReceiverAPIServicer to perform the required actions, then write the service results to the http response.
 type WebhookReceiverAPIRouter interface { 
 	EventsApplianceCreatePost(http.ResponseWriter, *http.Request)
+	EventsApplianceOfflinePost(http.ResponseWriter, *http.Request)
+	EventsApplianceOnlinePost(http.ResponseWriter, *http.Request)
+	EventsComissioningDonePost(http.ResponseWriter, *http.Request)
+	EventsEvPluggedPost(http.ResponseWriter, *http.Request)
+	EventsGatewayCreatePost(http.ResponseWriter, *http.Request)
+	EventsGatewayOfflinePost(http.ResponseWriter, *http.Request)
+	EventsGatewayOnlinePost(http.ResponseWriter, *http.Request)
+	EventsInverterStatusPost(http.ResponseWriter, *http.Request)
 }
 
 
@@ -29,5 +37,13 @@ type WebhookReceiverAPIRouter interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type WebhookReceiverAPIServicer interface { 
-	EventsApplianceCreatePost(context.Context, string, Event) (ImplResponse, error)
+	EventsApplianceCreatePost(context.Context, string, ApplianceCreateEvent) (ImplResponse, error)
+	EventsApplianceOfflinePost(context.Context, string, ApplianceOfflineEvent) (ImplResponse, error)
+	EventsApplianceOnlinePost(context.Context, string, ApplianceOnlineEvent) (ImplResponse, error)
+	EventsComissioningDonePost(context.Context, string, ComissioningDoneEvent) (ImplResponse, error)
+	EventsEvPluggedPost(context.Context, string, EvPluggedEvent) (ImplResponse, error)
+	EventsGatewayCreatePost(context.Context, string, GatewayCreateEvent) (ImplResponse, error)
+	EventsGatewayOfflinePost(context.Context, string, GatewayOfflineEvent) (ImplResponse, error)
+	EventsGatewayOnlinePost(context.Context, string, GatewayOnlineEvent) (ImplResponse, error)
+	EventsInverterStatusPost(context.Context, string, InverterStatusEvent) (ImplResponse, error)
 }

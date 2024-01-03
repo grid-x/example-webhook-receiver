@@ -45,50 +45,495 @@ paths:
         required: true
         content:
           application/json:
-            schema:
-              $ref: "#/components/schemas/Event"
+            schema: 
+              $ref: "#/components/schemas/ApplianceCreateEvent"
       parameters:
-        - name: X-Signature
-          in: header
-          required: true
-          description: >
-            The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-    
-            - `method` must be "sha512" in any case.
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
 
-            - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-    
-            This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-          schema:
-            type: string
-          example: "sha512=<signature>"
-        #- name: X-Signature-RS256
-        #  in: header
-        #  required: true
-        #  description: >
-        #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
-        #
-        #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
-        #    The external API can use the public key to validate that the signature is correct.
-        #  schema:
-        #    type: string
-    
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/appliance/offline:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/ApplianceOfflineEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/appliance/online:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/ApplianceOnlineEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/inverter/status:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/InverterStatusEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string  
+  /events/gateway/create:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/GatewayCreateEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/gateway/offline:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/GatewayOfflineEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/gateway/online:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/GatewayOnlineEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/ev/plugged:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/EVPluggedEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
+  /events/comissioning/done:
+    post:
+      tags:
+      - Webhook Receiver
+      summary: Webhook Receiver
+      description: >
+        Called by the gridX API when delivering a webhook. Third parties should use this reference
+        to implement an HTTP handler capable of handling incoming webhooks. 
+      responses:
+        '200':
+          description: >
+            Successfully received event (no issue with payload or validation).
+        '403':
+          description: >
+            Indicate that signature validation was not successful.
+        '404':
+          description: >
+            Not Found - indicate that the external API is not available.
+        '500':
+          description: >
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        '503':
+          description: >
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      requestBody:
+        description: The event's payload, partly depending on the event's type (see parameter eventType).
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: "#/components/schemas/ComissioningDoneEvent"
+      parameters:
+      - name: X-Signature
+        in: header
+        required: true
+        description: >
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+  
+          - `method` must be "sha512" in any case.
+
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+  
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        schema:
+          type: string
+        example: "sha512=<signature>"
+      #- name: X-Signature-RS256
+      #  in: header
+      #  required: true
+      #  description: >
+      #    The value of this header can be used to authenticate the event payload by using [RS256](https://datatracker.ietf.org/doc/html/rfc7518#section-3.3).
+      #
+      #    The signature is created by signing the SHA256 hash of the payload and signing it via RSA with a private key that is known solely to gridX.
+      #    The external API can use the public key to validate that the signature is correct.
+      #  schema:
+      #    type: string
 
 components:
   schemas:
-    Event:
+    BasicEvent:
+      required:
+        - id
+        - time
+        - specVersion
+        - source  
       title: Event
       description: >
         Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
         An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
         The extension attribute `notification` can be used by consumers to produce a notification.
-      type: object
-      required:
-        - id
-        - time
-        - type
-        - specVersion
-        - source
       properties:
         id:
           type: string
@@ -97,11 +542,6 @@ components:
           type: string
           format: date-time
           description: Time when the event has occurred in RFC3339 format.
-        type:
-          type: string
-          description: Type of the event, can be used to determine how the `data` payload is deserialized.
-          enum:
-            - appliance/create
         dataContentType:
           type: string
           description: Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
@@ -113,9 +553,6 @@ components:
           type: string
           description: The CloudEvents specification that is followed, currently "1.0". Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.
           example: "1.0"
-        data:
-          $ref: "#/components/schemas/ApplianceEventData"
-         
         source:
           type: string
           description: Source of the event, which is usually a resource identifier path that can be used to identify the object which triggered the event.
@@ -124,55 +561,177 @@ components:
           type: string
           format: uuid
           description: ID to identify the request triggering the event.
-        notification:
-          $ref: "#/components/schemas/Notification"
-    Notification:
-      type: object
-      description: Consists of a message and a recipient. Can be used by consumers to produce a notification `message` which can be sent to the `recipient`.
-      required:
-        - recipient
-        - message
-      properties:
-        recipient:
-          type: object
-          properties:
-            userID:
-              type: string
-              format: uuid
-              description: User ID for identifying the user via gridX API.
-            accountID:
-              type: string
-              format: uuid
-              description: Account ID for identifying the user via gridX API.
-            email:
-              type: string
-              format: email
-              description: Email address of the recipient.
-            fullName:
-              type: string
-              description: Full name of the recipient if available.
-            locale:
-              type: string
-              description: Determined locale of the user in format of a language tag, `<language>_<COUNTRY>`, e.g. `en_GB`.
-              example: fr_FR
-        message:
-          type: object
-          properties:
-            title:
-              description: Title of the message, in the `locale` of the `recipient`. Subject to changes at any time.
-            textContentType:
-              description: Content-Type of the `text` attribute. 
-              type: string
-              enum:
-                - text/html
-                - text/plain
-            text:
-              description: Exemplary text message in the `locale` of the `recipient`. Subject to changes at any time.
-              type: string
-            actionURL:
-              type: string
-              format: url
-              description: URL that links to further information about the event's origin, usable for call-to-action buttons.
+    ApplianceCreateEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - appliance/create
+          data:
+            $ref: "#/components/schemas/ApplianceEventData"
+    ApplianceOfflineEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - appliance/offline
+          data:
+            $ref: "#/components/schemas/ApplianceEventData"
+    ApplianceOnlineEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - appliance/online
+          data:
+            $ref: "#/components/schemas/ApplianceEventData"
+    InverterStatusEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - inverter/status
+          data:
+            $ref: "#/components/schemas/InverterEventData"
+    GatewayCreateEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - gateway/create
+          data:
+            $ref: "#/components/schemas/GatewayEventData"
+    GatewayOfflineEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - gateway/offline
+          data:
+            $ref: "#/components/schemas/GatewayEventData"
+    GatewayOnlineEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - gateway/online
+          data:
+            $ref: "#/components/schemas/GatewayEventData"
+    EVPluggedEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - ev/plugged
+          data:
+            $ref: "#/components/schemas/EVEventData"
+    ComissioningDoneEvent:
+      title: Event
+      description: >
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md). 
+        An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`.
+        The extension attribute `notification` can be used by consumers to produce a notification.
+      allOf: 
+      - $ref: "#/components/schemas/BasicEvent"
+      - type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: Type of the event, can be used to determine how the `data` payload is deserialized.
+            enum:
+              - ev/plugged
+          data:
+            $ref: "#/components/schemas/CommissioningData"
     #SystemEventData:
     #  type: object
     #  description: Payload for `system/*` events.
