@@ -3,8 +3,8 @@
 This example implements a simple Express based server to receive events from gridX through webhooks.
 It implements only the `appliance/online` event handler.
 
-The implementation just prints the received event to the console.
-You can work on the server while running it, every change will restart the server.
+The implementation just prints some of the received event's data to the console.
+You can play around with the server implementation while running it, every change will restart the server.
 
 ## Prerequisites
 

@@ -2,8 +2,19 @@
 
 `Webhook Receivers` are used to get notifications about state changes in gridX/XENON within your app.
 A webhook receiver is a publicly accessible endpoint on a server that is called by gridX when domain events, e.g., when an appliance goes online, occur.
-By implementing a webhook receiver, you can react on these events within your custom application.
-This allows for push based delivery of events as opposed to your app having to pull gridX's API constantly.
+By implementing a webhook receiver, you can react on these events within your custom application. This allows for push based delivery of events as opposed to your app having to pull gridX's API constantly.
+
+Currently, the following event types being emitted:
+
+* `appliance/create`: Appliance was created
+* `appliance/offline`: Appliance went offline
+* `appliance/online`: Appliance went online
+* `inverter/status`: Inverter status has changed
+* `gateway/create`: Gateway was created
+* `gateway/offline`: Gateway went offline
+* `gateway/online`: Gateway went online
+* `ev/plugged`: Vehicle was plugged into the charging station, charging state changed
+* `commissioning/done`: Commissioning of a gateway was completed
 
 If you want to learn more, [GitHub has a nice intro about webhooks](https://docs.github.com/en/webhooks/about-webhooks).
 
@@ -61,16 +72,7 @@ You need the following data to call the API:
 * The user id for which you want to receive event notifications (from your user details page on XENON). This is typically an administrative user for the resp. account
 * Your API token (from your XENON user settings)
 * The external webhook receiver URL. During development, this will be the external `ngrok` URL.
-* The event type you want to receive. Available event types are:
-  * appliance/create
-  * appliance/offline
-  * appliance/online
-  * inverter/status
-  * gateway/create
-  * gateway/offline
-  * gateway/online
-  * ev/plugged
-  * commissioning/done
+* The event type you want to receive. See above for the complete list of supported events.
 
 _register-appliance-online-webhook.json_
 ```json
