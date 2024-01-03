@@ -1,0 +1,15 @@
+{
+  "name": "gridx-webhook-receiver-sample-node-express",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "scripts": {
+    "start": "nodemon ./index.js"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
