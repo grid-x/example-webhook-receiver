@@ -1,0 +1,456 @@
+openapi: 3.0.3
+info:
+  description: |
+    This API describes the event webhook calling convention.
+    In order to receive webhook events from the gridX API, third parties must implement endpoints according to this specification. In the following, the external partner API is referred to as  "external API", while the gridX API is called "gridX".
+  title: Webhook Event Receiver API
+  version: 1.0.0
+  x-audience: company-internal
+  x-api-id: 7b2283ae-4623-42c2-af84-ef6ce4d72993
+servers:
+- url: https://external-api/gridx
+paths:
+  /events/{eventType}:
+    post:
+      description: "Called by the gridX API when delivering a webhook. Third parties\
+        \ should use this reference to implement an HTTP handler capable of handling\
+        \ incoming webhooks. \n"
+      parameters:
+      - description: The type of an event (e.g. 'appliance/offline'). The path depends
+          on how the webhook has been configured and is not a hard requirement.
+        example: appliance/create
+        explode: false
+        in: path
+        name: eventType
+        required: true
+        schema:
+          enum:
+          - appliance/create
+          - appliance/offline
+          - appliance/online
+          - inverter/status
+          - gateway/create
+          - gateway/offline
+          - gateway/online
+          - ev/plugged
+          - commissioning/done
+          type: string
+        style: simple
+      - description: |
+          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
+          - `method` must be "sha512" in any case.
+          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
+          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
+        example: sha512=<signature>
+        explode: false
+        in: header
+        name: X-Signature
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        description: "The event's payload, partly depending on the event's type (see\
+          \ parameter eventType)."
+        required: true
+      responses:
+        "200":
+          description: |
+            Successfully received event (no issue with payload or validation).
+        "403":
+          description: |
+            Indicate that signature validation was not successful.
+        "404":
+          description: |
+            Not Found - indicate that the external API is not available.
+        "500":
+          description: |
+            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+        "503":
+          description: |
+            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
+      summary: Webhook Receiver
+      tags:
+      - Webhook Receiver
+components:
+  schemas:
+    Event:
+      description: |
+        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
+      example:
+        notification:
+          recipient:
+            accountID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            fullName: fullName
+            locale: fr_FR
+            userID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            email: email
+          message:
+            textContentType: text/html
+            actionURL: http://example.com/aeiou
+            text: text
+            title: ""
+        specVersion: "1.0"
+        data: null
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        type: appliance/create
+        dataContentType: application/json
+      properties:
+        id:
+          format: uuid
+          type: string
+        time:
+          description: Time when the event has occurred in RFC3339 format.
+          format: date-time
+          type: string
+        type:
+          description: "Type of the event, can be used to determine how the `data`\
+            \ payload is deserialized."
+          enum:
+          - appliance/create
+          - appliance/offline
+          - appliance/online
+          - inverter/status
+          - gateway/create
+          - gateway/offline
+          - gateway/online
+          - ev/plugged
+          - commissioning/done
+          type: string
+        dataContentType:
+          default: application/json
+          description: "Content-Type indicating how to parse the `data` attribute.\
+            \ Only 'application/json' is supported for now. If ommitted, it is guaranteed\
+            \ to be `application/json`."
+          enum:
+          - application/json
+          example: application/json
+          type: string
+        specVersion:
+          description: "The CloudEvents specification that is followed, currently\
+            \ \"1.0\". Only consists of major and minor version parts, to allow patching\
+            \ in a backward-compatible fashion."
+          example: "1.0"
+          type: string
+        data:
+          $ref: '#/components/schemas/Event_data'
+        source:
+          description: "Source of the event, which is usually a resource identifier\
+            \ path that can be used to identify the object which triggered the event."
+          example: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+          type: string
+        correlationID:
+          description: ID to identify the request triggering the event.
+          format: uuid
+          type: string
+        notification:
+          $ref: '#/components/schemas/Notification'
+      required:
+      - id
+      - source
+      - specVersion
+      - time
+      - type
+      title: Event
+      type: object
+    Notification:
+      description: Consists of a message and a recipient. Can be used by consumers
+        to produce a notification `message` which can be sent to the `recipient`.
+      example:
+        recipient:
+          accountID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          fullName: fullName
+          locale: fr_FR
+          userID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          email: email
+        message:
+          textContentType: text/html
+          actionURL: http://example.com/aeiou
+          text: text
+          title: ""
+      properties:
+        recipient:
+          $ref: '#/components/schemas/Notification_recipient'
+        message:
+          $ref: '#/components/schemas/Notification_message'
+      required:
+      - message
+      - recipient
+      type: object
+    GatewayEventData:
+      description: Payload for `gateway/*` events.
+      properties:
+        gatewayID:
+          description: The ID of the gateway this event is triggered for.
+          example: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
+          format: uuid
+          type: string
+        gatewayName:
+          description: The name of the gateway corresponding to the gatewayID.
+          example: My gridBox
+          type: string
+        gatewaySerialnumber:
+          description: The serialnumber of the gateway corresponding to the gatewayID.
+          example: D403-007-000-000-001-B-X
+          type: string
+        systemID:
+          description: The ID of the system this event is triggered for.
+          example: af87d7b3-316f-4d26-868c-4ae351095bdc
+          format: uuid
+          type: string
+        systemName:
+          description: The name of the system corresponding to the systemID.
+          example: ExampleSystem
+          type: string
+        userID:
+          description: The ID of the user that owns the system.
+          example: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+          format: uuid
+          type: string
+        userName:
+          description: Name of the user belonging to the userID.
+          example: Max Mustermann
+          type: string
+        userMail:
+          description: E-Mail address of the user belonging to the userID.
+          example: max.mustermann@muster.de
+          type: string
+      required:
+      - gatewayID
+      - systemID
+      type: object
+    ApplianceEventData:
+      description: Payload for `appliance/*` events.
+      properties:
+        applianceID:
+          description: ID of the appliance that caused this event.
+          example: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          format: uuid
+          type: string
+        gatewayID:
+          description: The ID of the gateway that connects to the appliance.
+          example: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          format: uuid
+          type: string
+        model:
+          description: Model description of the appliance.
+          example: Baz
+          type: string
+        manufacturer:
+          description: Manufacturer of the appliance.
+          example: Iskraemeco
+          type: string
+        type:
+          description: General type of the appliance.
+          enum:
+          - UNKNOWN
+          - INVERTER
+          - METER
+          - EVSTATION
+          - HEAT_PUMP
+          - HEATER
+          - CONTAINER
+          example: METER
+          type: string
+        kind:
+          description: |
+            Kind of the appliance is used to provide further details on the appliance configuration and mode of operation. The kind property is only available for appliances with type INVERTER or METER. For inverters, only UNKNOWN, PV, BATTERY, HYBRID and PV_EXTERNAL are valid values. They describe the  kind of connected appliance(s) and define the role of the inverter in the system. For meters, kind specifies the appliance the meter is attached to. It resembles the location the meter is installed in.
+          enum:
+          - UNKNOWN
+          - PV
+          - BATTERY
+          - HYBRID
+          - PV_EXTERNAL
+          - GRID
+          - HEAT_PUMP
+          - FUEL_CELL
+          - HEAT_PUMP_EXTERNAL
+          - EVSTATION
+          - BTTP
+          - HEATING
+          - MISC
+          - CLUSTER
+          - WIND_TURBINE
+          example: BATTERY
+          type: string
+        name:
+          description: The name of the appliance as defined by the customer.
+          example: ExampleMeter
+          type: string
+        serialNumber:
+          description: Serial number of the appliance as returned by the appliance.
+          example: "9312355"
+          type: string
+        systemID:
+          description: The ID of the system that the gateway and appliance run in.
+          example: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          format: uuid
+          type: string
+        systemName:
+          description: Name of the system as defined by the customer.
+          example: ExampleSystem
+          type: string
+      required:
+      - applianceID
+      - gatewayID
+      - systemID
+      type: object
+    InverterEventData:
+      allOf:
+      - $ref: '#/components/schemas/ApplianceEventData'
+      - properties:
+          status:
+            description: Current (new) status of the inverter.
+            enum:
+            - UNKNOWN
+            - OK
+            - WARNING
+            - ERROR
+            example: OK
+            type: string
+          lastStatus:
+            description: Last status of the inverter.
+            enum:
+            - UNKNOWN
+            - OK
+            - WARNING
+            - ERROR
+            example: ERROR
+            type: string
+          errCode:
+            description: |
+              Current (new) error code as returned by the appliance. The value depends on the appliance manufacturer, model and firmware. Please refer to the manufacturers specification.
+            type: string
+          lastErrCode:
+            description: |
+              Last error code as returned by the appliance. The value depends on the appliance manufacturer, model and firmware. Please refer to the manufacturers specification.
+            example: F71A
+            type: string
+        required:
+        - lastStatus
+        - status
+        type: object
+      description: |
+        Payload for `inverter/*` events. The event describes the change of an inverter from one status to a new one. The old status is referred to as the lastStatus.
+    EVEventData:
+      allOf:
+      - $ref: '#/components/schemas/ApplianceEventData'
+      - properties:
+          evseID:
+            description: Electirc Vehicle Supply Equipment ID
+            example: FR*A23*E45B*78C
+            type: string
+          state:
+            description: State of the EV charging station.
+            enum:
+            - plugged
+            example: plugged
+            type: string
+        required:
+        - state
+        type: object
+      description: |
+        Payload for `ev/*` events. The event describes the change of an EV's state at a charging station.
+    CommissioningData:
+      description: Payload for `commissioning/done` events.
+      properties:
+        customerID:
+          description: The ID of the newly created customer after the commissioning
+            process.
+          example: 1a81c4f4-5f6c-48e6-be91-2528c1c0bb28
+          format: uuid
+          type: string
+        customerEmail:
+          description: The email of the newly created customer after the commissioning
+            process.
+          example: test@email.com
+          format: email
+          type: string
+        customerAddress:
+          description: The address of the newly created customer after the commissioning
+            process.
+          example: "Straße Str. 1, 20359, Hamburg, Germany"
+          format: string
+          type: string
+        systemName:
+          description: The name of the commissioned system.
+          example: Test system
+          format: string
+          type: string
+        gatewaySerialnumber:
+          description: The serialnumber of the gateway corresponding to the commissioned
+            system.
+          example: D403-007-000-000-001-B-X
+          type: string
+      type: object
+    Event_data:
+      description: Domain-specific data depending on the `type` of the event.
+      oneOf:
+      - $ref: '#/components/schemas/ApplianceEventData'
+      - $ref: '#/components/schemas/InverterEventData'
+      - $ref: '#/components/schemas/GatewayEventData'
+      - $ref: '#/components/schemas/EVEventData'
+      - $ref: '#/components/schemas/CommissioningData'
+      type: object
+    Notification_recipient:
+      example:
+        accountID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        fullName: fullName
+        locale: fr_FR
+        userID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        email: email
+      properties:
+        userID:
+          description: User ID for identifying the user via gridX API.
+          format: uuid
+          type: string
+        accountID:
+          description: Account ID for identifying the user via gridX API.
+          format: uuid
+          type: string
+        email:
+          description: Email address of the recipient.
+          format: email
+          type: string
+        fullName:
+          description: Full name of the recipient if available.
+          type: string
+        locale:
+          description: "Determined locale of the user in format of a language tag,\
+            \ `<language>_<COUNTRY>`, e.g. `en_GB`."
+          example: fr_FR
+          type: string
+      type: object
+    Notification_message:
+      example:
+        textContentType: text/html
+        actionURL: http://example.com/aeiou
+        text: text
+        title: ""
+      properties:
+        title:
+          description: "Title of the message, in the `locale` of the `recipient`.\
+            \ Subject to changes at any time."
+        textContentType:
+          description: Content-Type of the `text` attribute.
+          enum:
+          - text/html
+          - text/plain
+          type: string
+        text:
+          description: Exemplary text message in the `locale` of the `recipient`.
+            Subject to changes at any time.
+          type: string
+        actionURL:
+          description: "URL that links to further information about the event's origin,\
+            \ usable for call-to-action buttons."
+          format: url
+          type: string
+      type: object
