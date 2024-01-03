@@ -1,0 +1,8 @@
+{
+  "eventType": "appliance/online",
+  "notificationType": {
+      "webhook": {
+      "targetURL": "https://10a6-178-27-146-51.ngrok-free.app/gridx/events/appliance/online"
+    }
+  }
+}
