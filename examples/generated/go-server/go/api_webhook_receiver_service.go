@@ -26,9 +26,9 @@ func NewWebhookReceiverAPIService() WebhookReceiverAPIServicer {
 	return &WebhookReceiverAPIService{}
 }
 
-// EventsEventTypePost - Webhook Receiver
-func (s *WebhookReceiverAPIService) EventsEventTypePost(ctx context.Context, eventType string, xSignature string, event Event) (ImplResponse, error) {
-	// TODO - update EventsEventTypePost with the required logic for this service method.
+// EventsApplianceCreatePost - Webhook Receiver
+func (s *WebhookReceiverAPIService) EventsApplianceCreatePost(ctx context.Context, xSignature string, event Event) (ImplResponse, error) {
+	// TODO - update EventsApplianceCreatePost with the required logic for this service method.
 	// Add api_webhook_receiver_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	// TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
@@ -46,5 +46,5 @@ func (s *WebhookReceiverAPIService) EventsEventTypePost(ctx context.Context, eve
 	// TODO: Uncomment the next line to return response Response(503, {}) or use other options such as http.Ok ...
 	// return Response(503, nil),nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("EventsEventTypePost method not implemented")
+	return Response(http.StatusNotImplemented, nil), errors.New("EventsApplianceCreatePost method not implemented")
 }

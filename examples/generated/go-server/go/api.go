@@ -20,7 +20,7 @@ import (
 // The WebhookReceiverAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a WebhookReceiverAPIServicer to perform the required actions, then write the service results to the http response.
 type WebhookReceiverAPIRouter interface { 
-	EventsEventTypePost(http.ResponseWriter, *http.Request)
+	EventsApplianceCreatePost(http.ResponseWriter, *http.Request)
 }
 
 
@@ -29,5 +29,5 @@ type WebhookReceiverAPIRouter interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type WebhookReceiverAPIServicer interface { 
-	EventsEventTypePost(context.Context, string, string, Event) (ImplResponse, error)
+	EventsApplianceCreatePost(context.Context, string, Event) (ImplResponse, error)
 }

@@ -33,7 +33,7 @@ type Event struct {
 	// The CloudEvents specification that is followed, currently \"1.0\". Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.
 	SpecVersion string `json:"specVersion"`
 
-	Data EventData `json:"data,omitempty"`
+	Data ApplianceEventData `json:"data,omitempty"`
 
 	// Source of the event, which is usually a resource identifier path that can be used to identify the object which triggered the event.
 	Source string `json:"source"`
@@ -59,7 +59,7 @@ func AssertEventRequired(obj Event) error {
 		}
 	}
 
-	if err := AssertEventDataRequired(obj.Data); err != nil {
+	if err := AssertApplianceEventDataRequired(obj.Data); err != nil {
 		return err
 	}
 	if err := AssertNotificationRequired(obj.Notification); err != nil {

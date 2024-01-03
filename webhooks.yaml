@@ -13,9 +13,10 @@ info:
 
 servers:
   - url: https://external-api/gridx
+  - url: http://localhost:8080/gridx
 
 paths:
-  /events/{eventType}:
+  /events/appliance/create:
     post:
       tags:
       - Webhook Receiver
@@ -47,42 +48,6 @@ paths:
             schema:
               $ref: "#/components/schemas/Event"
       parameters:
-        - name: eventType
-          in: path
-          required: true
-          description: The type of an event (e.g. 'appliance/offline'). The path depends on how the webhook has been configured and is not a hard requirement.
-          example: appliance/create
-          schema:
-            type: string
-            enum:
-            - appliance/create
-            #- appliance/update
-            #- appliance/delete
-            - appliance/offline
-            - appliance/online
-            #- appliance/energy
-            - inverter/status
-            - gateway/create
-            #- gateway/update
-            #- gateway/delete
-            - gateway/offline
-            - gateway/online
-            #- system/create
-            #- system/update
-            #- system/delete
-            #- account/create
-            #- account/update
-            #- account/delete
-            #- user/update
-            #- user/create
-            #- user/delete
-            #- energy/feedin
-            #- energy/ev-maxpower-update
-            #- community/contract-signed
-            - ev/plugged
-            #- auth/sign-up
-            #- auth/password-reset
-            - commissioning/done
         - name: X-Signature
           in: header
           required: true
@@ -137,33 +102,6 @@ components:
           description: Type of the event, can be used to determine how the `data` payload is deserialized.
           enum:
             - appliance/create
-            #- appliance/update
-            #- appliance/delete
-            - appliance/offline
-            - appliance/online
-            #- appliance/energy
-            - inverter/status
-            - gateway/create
-            #- gateway/update
-            #- gateway/delete
-            - gateway/offline
-            - gateway/online
-            #- system/create
-            #- system/update
-            #- system/delete
-            #- account/create
-            #- account/update
-            #- account/delete
-            #- user/update
-            #- user/create
-            #- user/delete
-            #- energy/feedin
-            #- energy/ev-maxpower-update
-            #- community/contract-signed
-            - ev/plugged
-            #- auth/sign-up
-            #- auth/password-reset
-            - commissioning/done
         dataContentType:
           type: string
           description: Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
@@ -176,17 +114,8 @@ components:
           description: The CloudEvents specification that is followed, currently "1.0". Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.
           example: "1.0"
         data:
-          type: object
-          description: Domain-specific data depending on the `type` of the event.
-          oneOf:
-            - $ref: "#/components/schemas/ApplianceEventData"
-            - $ref: "#/components/schemas/InverterEventData"
-            - $ref: "#/components/schemas/GatewayEventData"
-            #- $ref: "#/components/schemas/SystemEventData"
-            - $ref: "#/components/schemas/EVEventData"
-            #- $ref: "#/components/schemas/SignUpData"
-            #- $ref: "#/components/schemas/PasswordResetData"
-            - $ref: "#/components/schemas/CommissioningData"
+          $ref: "#/components/schemas/ApplianceEventData"
+         
         source:
           type: string
           description: Source of the event, which is usually a resource identifier path that can be used to identify the object which triggered the event.
@@ -496,4 +425,3 @@ components:
           type: string
           description: The serialnumber of the gateway corresponding to the commissioned system.
           example: D403-007-000-000-001-B-X
-

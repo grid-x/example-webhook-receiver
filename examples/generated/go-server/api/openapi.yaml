@@ -9,33 +9,14 @@ info:
   x-api-id: 7b2283ae-4623-42c2-af84-ef6ce4d72993
 servers:
 - url: https://external-api/gridx
+- url: http://localhost:8080/gridx
 paths:
-  /events/{eventType}:
+  /events/appliance/create:
     post:
       description: "Called by the gridX API when delivering a webhook. Third parties\
         \ should use this reference to implement an HTTP handler capable of handling\
         \ incoming webhooks. \n"
       parameters:
-      - description: The type of an event (e.g. 'appliance/offline'). The path depends
-          on how the webhook has been configured and is not a hard requirement.
-        example: appliance/create
-        explode: false
-        in: path
-        name: eventType
-        required: true
-        schema:
-          enum:
-          - appliance/create
-          - appliance/offline
-          - appliance/online
-          - inverter/status
-          - gateway/create
-          - gateway/offline
-          - gateway/online
-          - ev/plugged
-          - commissioning/done
-          type: string
-        style: simple
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
           - `method` must be "sha512" in any case.
@@ -95,7 +76,17 @@ components:
             text: text
             title: ""
         specVersion: "1.0"
-        data: null
+        data:
+          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          serialNumber: "9312355"
+          systemName: ExampleSystem
+          kind: BATTERY
+          name: ExampleMeter
+          model: Baz
+          type: METER
+          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          manufacturer: Iskraemeco
         correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         time: 2000-01-23T04:56:07.000+00:00
@@ -115,14 +106,6 @@ components:
             \ payload is deserialized."
           enum:
           - appliance/create
-          - appliance/offline
-          - appliance/online
-          - inverter/status
-          - gateway/create
-          - gateway/offline
-          - gateway/online
-          - ev/plugged
-          - commissioning/done
           type: string
         dataContentType:
           default: application/json
@@ -140,7 +123,7 @@ components:
           example: "1.0"
           type: string
         data:
-          $ref: '#/components/schemas/Event_data'
+          $ref: '#/components/schemas/ApplianceEventData'
         source:
           description: "Source of the event, which is usually a resource identifier\
             \ path that can be used to identify the object which triggered the event."
@@ -228,6 +211,17 @@ components:
       type: object
     ApplianceEventData:
       description: Payload for `appliance/*` events.
+      example:
+        applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+        systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+        serialNumber: "9312355"
+        systemName: ExampleSystem
+        kind: BATTERY
+        name: ExampleMeter
+        model: Baz
+        type: METER
+        gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+        manufacturer: Iskraemeco
       properties:
         applianceID:
           description: ID of the appliance that caused this event.
@@ -389,15 +383,6 @@ components:
             system.
           example: D403-007-000-000-001-B-X
           type: string
-      type: object
-    Event_data:
-      description: Domain-specific data depending on the `type` of the event.
-      oneOf:
-      - $ref: '#/components/schemas/ApplianceEventData'
-      - $ref: '#/components/schemas/InverterEventData'
-      - $ref: '#/components/schemas/GatewayEventData'
-      - $ref: '#/components/schemas/EVEventData'
-      - $ref: '#/components/schemas/CommissioningData'
       type: object
     Notification_recipient:
       example:

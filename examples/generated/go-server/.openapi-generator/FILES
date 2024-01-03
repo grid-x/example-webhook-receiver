@@ -14,7 +14,6 @@ go/model_appliance_event_data.go
 go/model_commissioning_data.go
 go/model_ev_event_data.go
 go/model_event.go
-go/model_event_data.go
 go/model_gateway_event_data.go
 go/model_inverter_event_data.go
 go/model_notification.go
