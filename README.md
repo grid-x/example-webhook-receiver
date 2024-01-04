@@ -120,7 +120,7 @@ curl -X DELETE \
 ### :bento: Samples
 
 * [NodeJS/Express](./examples/node-express/README.md): Hand-written webhook receiver that writes the IDs of appliances coming online to the console.
-* [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`
+* [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`. [^1]
 * Python/Flask: Server with stubs for all supported event types generated using `openapi-generator`
 
 ### :factory: Generating Server Stubs
@@ -132,12 +132,10 @@ containing handler stub implementations for all supported events and go from the
 From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks) 
 or [`oapi-codegen`](https://github.com/deepmap/oapi-codegen) (go only)).
 
-To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) using `OpenAPI Generator`, use the following command. 
-1. generate a clean version of the API specs:
+To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) using `OpenAPI Generator`, use the following command.
+
 ```sh
-  openapi-generator generate -g openapi-yaml -o .out -i ./webhooks.yaml  
+  openapi-generator generate -g <server> -o examples/<servername> -i ./webhooks.yaml 
 ```
-1. generate the server stub:
-```sh
-  openapi-generator generate -g <server> -o examples/<servername> -i .out/openapi/openapi.yaml 
-```
+
+[^1]: We also ran `goimports . -w` on the generated code to make it match the standard code style and remove unused imports put in by the generator.
