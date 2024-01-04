@@ -125,8 +125,14 @@ curl -X DELETE \
 
 ### :factory: Generating Server Stubs
 
-<<<<<<< Updated upstream
-To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) use the following commands to: 
+You might not want to hand-roll your own server implementation but get started more quickly by scaffolding a server
+containing handler stub implementations for all supported events and go from there.
+[`webhooks.yaml`](./webhooks.yaml) contains the [OpenAPI specification](https://spec.openapis.org/oas/v3.0.3) for webhook receivers.
+
+From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks) 
+or [`oapi-codegen`](https://github.com/deepmap/oapi-codegen) (go only)).
+
+To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) using `OpenAPI Generator`, use the following command. 
 1. generate a clean version of the API specs:
 ```sh
   openapi-generator generate -g openapi-yaml -o .out -i ./webhooks.yaml  
@@ -135,13 +141,3 @@ To generate server stubs in a language of [your choice](https://openapi-generato
 ```sh
   openapi-generator generate -g <server> -o examples/<servername> -i .out/openapi/openapi.yaml 
 ```
-=======
-You might not want to hand-roll your own server implementation but get started more quickly by scaffolding a server
-containing handler stub implementations for all supported events and go from there.
-
-[`webhooks.yaml`](./webhooks.yaml) contains the [OpenAPI specification](https://spec.openapis.org/oas/v3.0.3) for webhook receivers. 
-From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks) 
-or [`oapi-codegen`](https://github.com/deepmap/oapi-codegen) (go only)).
-
-
->>>>>>> Stashed changes
