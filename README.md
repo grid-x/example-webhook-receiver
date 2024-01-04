@@ -75,6 +75,7 @@ You need the following data to call the API:
 * The event type you want to receive. See above for the complete list of supported events.
 
 _register-appliance-online-webhook.json_
+
 ```json
 {
     "eventType": "appliance/online",
@@ -94,7 +95,8 @@ curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifi
   --data @register-appliance-online-webhook.json
 ```
 
-To verify your rule was created, you can retrieve the current rules from the API. Please note the `id` property of the rule you just created.
+To verify your rule was created, you can retrieve the current rules from the API.
+Please note the `id` property of the rule you just created.
 
 ```sh
 curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifications/rules \
@@ -102,7 +104,6 @@ curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifi
   --header 'accept: application/vnd.gridx.v2+json' \
   --header 'content-type: application/json'
 ```
-
 
 #### 4. Clean up rules created for testing
 
@@ -124,6 +125,7 @@ curl -X DELETE \
 
 ### :factory: Generating Server Stubs
 
+<<<<<<< Updated upstream
 To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) use the following commands to: 
 1. generate a clean version of the API specs:
 ```sh
@@ -133,3 +135,13 @@ To generate server stubs in a language of [your choice](https://openapi-generato
 ```sh
   openapi-generator generate -g <server> -o examples/<servername> -i .out/openapi/openapi.yaml 
 ```
+=======
+You might not want to hand-roll your own server implementation but get started more quickly by scaffolding a server
+containing handler stub implementations for all supported events and go from there.
+
+[`webhooks.yaml`](./webhooks.yaml) contains the [OpenAPI specification](https://spec.openapis.org/oas/v3.0.3) for webhook receivers. 
+From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks) 
+or [`oapi-codegen`](https://github.com/deepmap/oapi-codegen) (go only)).
+
+
+>>>>>>> Stashed changes

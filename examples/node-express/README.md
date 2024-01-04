@@ -12,7 +12,14 @@ To run this server, you need to have `NodeJS` and `yarn` or `npm` installed.
 
 ## Usage
 
+_yarn_
 ```sh
 yarn
 yarn start
+```
+
+_npm_
+```sh
+npm install
+npm run start
 ```
