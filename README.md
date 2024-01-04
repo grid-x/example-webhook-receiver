@@ -124,4 +124,12 @@ curl -X DELETE \
 
 ### :factory: Generating Server Stubs
 
-TODO
+To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) use the following commands to: 
+1. generate a clean version of the API specs:
+```sh
+  openapi-generator generate -g openapi-yaml -o .out -i ./webhooks.yaml  
+```
+1. generate the server stub:
+```sh
+  openapi-generator generate -g <server> -o examples/<servername> -i .out/openapi/openapi.yaml 
+```
