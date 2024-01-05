@@ -120,17 +120,19 @@ curl -X DELETE \
 ### :bento: Samples
 
 * [NodeJS/Express](./examples/node-express/README.md): Hand-written webhook receiver that writes the IDs of appliances coming online to the console.
-* [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`. [^1]
-* Python/Flask: Server with stubs for all supported event types generated using `openapi-generator`
+* [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`.[^1]
+* Python/aiohttp: Server with stubs for all supported event types generated using `openapi-generator`. For the sample, we print information about `appliance/online` events.[^2]
 
 ### :factory: Generating Server Stubs
 
 You might not want to hand-roll your own server implementation but get started more quickly by scaffolding a server
 containing handler stub implementations for all supported events and go from there.
+
 [`webhooks.yaml`](./webhooks.yaml) contains the [OpenAPI specification](https://spec.openapis.org/oas/v3.0.3) for webhook receivers.
 
-From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks) 
+From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks)
 or [`oapi-codegen`](https://github.com/deepmap/oapi-codegen) (go only)).
+While you might need to [tweak the templates](https://openapi-generator.tech/docs/templating) used for generation and fine tune the results, it's a good way to get started in our experience.
 
 To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) using `OpenAPI Generator`, use the following command.
 
@@ -138,4 +140,6 @@ To generate server stubs in a language of [your choice](https://openapi-generato
   openapi-generator generate -g <server> -o examples/<servername> -i ./webhooks.yaml 
 ```
 
-[^1]: We also ran `goimports . -w` on the generated code to make it match the standard code style and remove unused imports put in by the generator.
+[^1]: We also ran `goimports . -w` (find it [here](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)) on the generated code to make it match the standard code style and remove unused imports put in by the generator.
+
+[^2]: To be able to install all required libraries, you need [`python3`](https://www.python.org/downloads/) at at least `v3.11` and [`rust`](https://rustup.rs/) installed. Use the latest nightly version of rust: `rustup default nightly`. For the generated code to run, we needed to remove the `x_signature` parameter from the controller methods. Its value can still be accessed through `request.headers`. Even given the whole process is cumbersome, you still might want use the generated code as a starting point and/or tweak the code generation templates to improve that. But that's out of the scope for these samples.
