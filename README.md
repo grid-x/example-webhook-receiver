@@ -121,7 +121,7 @@ curl -X DELETE \
 
 * [NodeJS/Express](./examples/node-express/README.md): Hand-written webhook receiver that writes the IDs of appliances coming online to the console.
 * [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`.[^1]
-* Python/aiohttp: Server with stubs for all supported event types generated using `openapi-generator`. For the sample, we print information about `appliance/online` events.[^2]
+* [Python/aiohttp](./examples/python-aiohttp/README.md): Server with stubs for all supported event types generated using `openapi-generator`. For the sample, we print information about `appliance/online` events.[^2]
 
 ### :factory: Generating Server Stubs
 
@@ -142,4 +142,4 @@ To generate server stubs in a language of [your choice](https://openapi-generato
 
 [^1]: We also ran `goimports . -w` (find it [here](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)) on the generated code to make it match the standard code style and remove unused imports put in by the generator.
 
-[^2]: To be able to install all required libraries, you need [`python3`](https://www.python.org/downloads/) at at least `v3.11` and [`rust`](https://rustup.rs/) installed. Use the latest nightly build of rust: `rustup default nightly`. For the generated code to run, we needed to remove the `x_signature` parameter from the controller methods. Its value can still be accessed through `request.headers`. Even given the whole process is cumbersome, you still might want use the generated code as a starting point and/or tweak the code generation templates to improve that. But that's out of the scope for these samples.
+[^2]: To be able to install all required libraries, you need [`python3`](https://www.python.org/downloads/) at at least `v3.11` and [`rust`](https://rustup.rs/) installed. Use the latest nightly build of rust: `rustup default nightly`. For the generated code to run, we needed to remove the `x_signature` parameter from the controller methods (`sed -i '' 's/, x_signature,/,/g' openapi_server/controllers/webhook_receiver_controller.py`). Its value can still be accessed through `request.headers` as shown in the example. Even given the whole process is cumbersome, you still might want use the generated code as a starting point and/or tweak the code generation templates to improve that. But that's out of the scope for these samples.

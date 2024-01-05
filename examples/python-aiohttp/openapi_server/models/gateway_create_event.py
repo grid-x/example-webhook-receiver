@@ -119,7 +119,7 @@ class GatewayCreateEvent(Model):
     def data_content_type(self):
         """Gets the data_content_type of this GatewayCreateEvent.
 
-        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
+        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
 
         :return: The data_content_type of this GatewayCreateEvent.
         :rtype: str
@@ -130,7 +130,7 @@ class GatewayCreateEvent(Model):
     def data_content_type(self, data_content_type):
         """Sets the data_content_type of this GatewayCreateEvent.
 
-        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
+        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
 
         :param data_content_type: The data_content_type of this GatewayCreateEvent.
         :type data_content_type: str
@@ -221,7 +221,6 @@ class GatewayCreateEvent(Model):
     def type(self):
         """Gets the type of this GatewayCreateEvent.
 
-        Type of the event, can be used to determine how the `data` payload is deserialized.
 
         :return: The type of this GatewayCreateEvent.
         :rtype: str
@@ -232,7 +231,6 @@ class GatewayCreateEvent(Model):
     def type(self, type):
         """Sets the type of this GatewayCreateEvent.
 
-        Type of the event, can be used to determine how the `data` payload is deserialized.
 
         :param type: The type of this GatewayCreateEvent.
         :type type: str

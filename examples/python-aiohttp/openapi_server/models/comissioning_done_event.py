@@ -119,7 +119,7 @@ class ComissioningDoneEvent(Model):
     def data_content_type(self):
         """Gets the data_content_type of this ComissioningDoneEvent.
 
-        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
+        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
 
         :return: The data_content_type of this ComissioningDoneEvent.
         :rtype: str
@@ -130,7 +130,7 @@ class ComissioningDoneEvent(Model):
     def data_content_type(self, data_content_type):
         """Sets the data_content_type of this ComissioningDoneEvent.
 
-        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
+        Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
 
         :param data_content_type: The data_content_type of this ComissioningDoneEvent.
         :type data_content_type: str
@@ -221,7 +221,6 @@ class ComissioningDoneEvent(Model):
     def type(self):
         """Gets the type of this ComissioningDoneEvent.
 
-        Type of the event, can be used to determine how the `data` payload is deserialized.
 
         :return: The type of this ComissioningDoneEvent.
         :rtype: str
@@ -232,12 +231,11 @@ class ComissioningDoneEvent(Model):
     def type(self, type):
         """Sets the type of this ComissioningDoneEvent.
 
-        Type of the event, can be used to determine how the `data` payload is deserialized.
 
         :param type: The type of this ComissioningDoneEvent.
         :type type: str
         """
-        allowed_values = ["ev/plugged"]  # noqa: E501
+        allowed_values = ["commissioning/done"]  # noqa: E501
         if type not in allowed_values:
             raise ValueError(
                 "Invalid value for `type` ({0}), must be one of {1}"
