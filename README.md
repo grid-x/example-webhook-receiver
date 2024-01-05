@@ -140,6 +140,6 @@ To generate server stubs in a language of [your choice](https://openapi-generato
   openapi-generator generate -g <server> -o examples/<servername> -i ./webhooks.yaml 
 ```
 
-[^1]: We also ran `goimports . -w` (find it [here](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)) on the generated code to make it match the standard code style and remove unused imports put in by the generator.
+[^1]: We also ran `go mod tidy` and `goimports . -w` (find it [here](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)) on the generated code to make it match the standard code style and remove unused imports put in by the generator.
 
 [^2]: To be able to install all required libraries, you need [`python3`](https://www.python.org/downloads/) at at least `v3.11` and [`rust`](https://rustup.rs/) installed. Use the latest nightly build of rust: `rustup default nightly`. For the generated code to run, we needed to remove the `x_signature` parameter from the controller methods (`sed -i '' 's/, x_signature,/,/g' openapi_server/controllers/webhook_receiver_controller.py`). Its value can still be accessed through `request.headers` as shown in the example. Even given the whole process is cumbersome, you still might want use the generated code as a starting point and/or tweak the code generation templates to improve that. But that's out of the scope for these samples.

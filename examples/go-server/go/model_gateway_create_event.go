@@ -1,5 +1,5 @@
 /*
- * Webhook Event Receiver API
+ * gridX Webhook Event Receiver API
  *
  * This API describes the event webhook calling convention. In order to receive webhook events from the gridX API, third parties must implement endpoints according to this specification. In the following, the external partner API is referred to as  \"external API\", while the gridX API is called \"gridX\".
  *
@@ -13,14 +13,13 @@ import (
 	"time"
 )
 
-// GatewayCreateEvent - Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
 type GatewayCreateEvent struct {
 	Id string `json:"id"`
 
 	// Time when the event has occurred in RFC3339 format.
 	Time time.Time `json:"time"`
 
-	// Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
+	// Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
 	DataContentType string `json:"dataContentType,omitempty"`
 
 	// The CloudEvents specification that is followed, currently \"1.0\". Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.
@@ -32,7 +31,6 @@ type GatewayCreateEvent struct {
 	// ID to identify the request triggering the event.
 	CorrelationID string `json:"correlationID,omitempty"`
 
-	// Type of the event, can be used to determine how the `data` payload is deserialized.
 	Type string `json:"type"`
 
 	Data GatewayEventData `json:"data,omitempty"`

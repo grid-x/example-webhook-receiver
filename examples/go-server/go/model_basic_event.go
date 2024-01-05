@@ -1,5 +1,5 @@
 /*
- * Webhook Event Receiver API
+ * gridX Webhook Event Receiver API
  *
  * This API describes the event webhook calling convention. In order to receive webhook events from the gridX API, third parties must implement endpoints according to this specification. In the following, the external partner API is referred to as  \"external API\", while the gridX API is called \"gridX\".
  *
@@ -20,7 +20,7 @@ type BasicEvent struct {
 	// Time when the event has occurred in RFC3339 format.
 	Time time.Time `json:"time"`
 
-	// Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If ommitted, it is guaranteed to be `application/json`.
+	// Content-Type indicating how to parse the `data` attribute. Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
 	DataContentType string `json:"dataContentType,omitempty"`
 
 	// The CloudEvents specification that is followed, currently \"1.0\". Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.

@@ -3,19 +3,17 @@ info:
   description: |
     This API describes the event webhook calling convention.
     In order to receive webhook events from the gridX API, third parties must implement endpoints according to this specification. In the following, the external partner API is referred to as  "external API", while the gridX API is called "gridX".
-  title: Webhook Event Receiver API
+  title: gridX Webhook Event Receiver API
   version: 1.0.0
   x-audience: company-internal
   x-api-id: 7b2283ae-4623-42c2-af84-ef6ce4d72993
 servers:
-- url: https://external-api/gridx
+- url: https://your-webhook-receiver-url-goes-here/gridx
 - url: http://localhost:8080/gridx
 paths:
   /events/appliance/create:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when an appliance is created.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -59,9 +57,7 @@ paths:
       - Webhook Receiver
   /events/appliance/offline:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when when an appliance goes offline.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -81,8 +77,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ApplianceOfflineEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -105,9 +99,7 @@ paths:
       - Webhook Receiver
   /events/appliance/online:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when an appliance comes online.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -127,8 +119,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ApplianceOnlineEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -151,9 +141,7 @@ paths:
       - Webhook Receiver
   /events/inverter/status:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when an inverter's status changes.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -173,8 +161,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/InverterStatusEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -197,9 +183,7 @@ paths:
       - Webhook Receiver
   /events/gateway/create:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when a gateway is created.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -219,8 +203,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GatewayCreateEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -243,9 +225,7 @@ paths:
       - Webhook Receiver
   /events/gateway/offline:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when a gateway goes offline.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -265,8 +245,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GatewayOfflineEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -289,9 +267,7 @@ paths:
       - Webhook Receiver
   /events/gateway/online:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when a gateway comes online.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -311,8 +287,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GatewayOnlineEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -335,9 +309,7 @@ paths:
       - Webhook Receiver
   /events/ev/plugged:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when an EV charging state changes.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -357,8 +329,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/EVPluggedEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -381,9 +351,7 @@ paths:
       - Webhook Receiver
   /events/comissioning/done:
     post:
-      description: "Called by the gridX API when delivering a webhook. Third parties\
-        \ should use this reference to implement an HTTP handler capable of handling\
-        \ incoming webhooks. \n"
+      description: Called by the gridX API when commissioning a gateway was finished.
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
@@ -403,8 +371,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ComissioningDoneEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
         required: true
       responses:
         "200":
@@ -441,7 +407,7 @@ components:
         dataContentType:
           default: application/json
           description: "Content-Type indicating how to parse the `data` attribute.\
-            \ Only 'application/json' is supported for now. If ommitted, it is guaranteed\
+            \ Only 'application/json' is supported for now. If omitted, it is guaranteed\
             \ to be `application/json`."
           enum:
           - application/json
@@ -473,8 +439,6 @@ components:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - appliance/create
             type: string
@@ -483,16 +447,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event appliance/create
     ApplianceOfflineEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - appliance/offline
             type: string
@@ -501,16 +461,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event appliance/offline
     ApplianceOnlineEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - appliance/online
             type: string
@@ -519,16 +475,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event appliance/online
     InverterStatusEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - inverter/status
             type: string
@@ -537,16 +489,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event inverter/status
     GatewayCreateEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - gateway/create
             type: string
@@ -555,16 +503,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event gateway/create
     GatewayOfflineEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - gateway/offline
             type: string
@@ -573,16 +517,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event gateway/offline
     GatewayOnlineEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - gateway/online
             type: string
@@ -591,16 +531,12 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event gateway/online
     EVPluggedEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
             - ev/plugged
             type: string
@@ -609,27 +545,21 @@ components:
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event ev/plugged
     ComissioningDoneEvent:
       allOf:
       - $ref: '#/components/schemas/BasicEvent'
       - properties:
           type:
-            description: "Type of the event, can be used to determine how the `data`\
-              \ payload is deserialized."
             enum:
-            - ev/plugged
+            - commissioning/done
             type: string
           data:
             $ref: '#/components/schemas/CommissioningData'
         required:
         - type
         type: object
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
-      title: Event
+      title: Event commissioning/done
     GatewayEventData:
       description: Payload for `gateway/*` events.
       properties:
