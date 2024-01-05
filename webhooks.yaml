@@ -309,7 +309,7 @@ paths:
       - Webhook Receiver
   /events/ev/plugged:
     post:
-      description: "Called by the gridX API when an EV is plugged. Also delivers current charging status."
+      description: "Called by the gridX API when an EV charging state changes."
       parameters:
       - description: |
           The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
