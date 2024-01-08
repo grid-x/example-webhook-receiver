@@ -4,18 +4,22 @@ import { useState, useEffect } from "react";
 
 const socket = new WebSocket("ws://localhost:8088");
 
+// Connect to websocket server
 socket.addEventListener("open", (event) => {
   socket.send("Connection established");
 });
 
 function App() {
+  // Holds the state of all systems and appliances the component has seen events for
   const [systems, setSystems] = useState({});
 
+  // Add websocket listener when the component renders and remove it when it is destroyed.
   useEffect(() => {
     socket.addEventListener("message", consumeMessage);
     return () => socket.removeEventListener("message", consumeMessage);
   });
 
+  // Whenever a message arrives, update the local state (i.e. the systems displayed)
   const consumeMessage = (event) => {
     const payload = JSON.parse(event.data);
 
