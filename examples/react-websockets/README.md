@@ -1,7 +1,7 @@
 # Reactive Webapp
 
 This example implements a simple Express based server to receive events from gridX through webhooks.
-It forwards each events to a client app using websockets, to implement a fully reactive pattern without relying on pollimg
+It forwards each events to a client app using websockets, to implement a fully reactive pattern instead of relying on polling.
 
 ## Prerequisites
 
