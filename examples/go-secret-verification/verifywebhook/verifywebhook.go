@@ -1,4 +1,16 @@
+package verifywebhook
 
+import (
+	"crypto/hmac"
+	"crypto/sha512"
+	"encoding/hex"
+	"encoding/json"
+	"errors"
+	"io"
+
+	"net/http"
+	"strings"
+)
 
 // Hook is an inbound webhook
 type Hook struct {
@@ -21,10 +33,13 @@ func (h *Hook) SignedBy(secret []byte) bool {
 		return false
 	}
 
-	actual := make([]byte, 20)
-	hex.Decode(actual, []byte(h.Signature[5:]))
+	prefixLen := len(signaturePrefix)
+	signature := h.Signature[prefixLen:]
+	actualSignature := make([]byte, hex.DecodedLen(len(signature)))
+	hex.Decode(actualSignature, []byte(signature))
 
-	return hmac.Equal(signBody(secret, h.Payload), actual)
+	localSignature := signBody(secret, h.Payload)
+	return hmac.Equal(localSignature, actualSignature)
 }
 
 func (h *Hook) Extract(dst interface{}) error {
@@ -38,12 +53,12 @@ func New(req *http.Request) (hook *Hook, err error) {
 	}
 
 	// Extract signature
-	if hook.Signature = req.Header.Get("X-Signature-SHA256"); len(hook.Signature) == 0 {
+	if hook.Signature = req.Header.Get("X-Signature"); len(hook.Signature) == 0 {
 		return nil, errors.New("No signature!")
 	}
 
 	// Get raw body
-	hook.Payload, err = ioutil.ReadAll(req.Body)
+	hook.Payload, err = io.ReadAll(req.Body)
 	return
 }
 

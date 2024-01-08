@@ -1,3 +1,3 @@
-module github.com/grid-x/example-webhook-receiver
+module github.com/grid-x/webhook/examples/go-secret-verification
 
-go 1.21.0
+go 1.20

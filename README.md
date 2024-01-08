@@ -49,7 +49,7 @@ sequenceDiagram
     alt run time
       gridX->>+Webhook Receiver: Webhook Event
       Webhook Receiver->>Webhook Receiver: Verify signature
-      Note right of Webhook Receiver: 1) sign event payload with<br>notification rule secret <br>2) compare signature from with<br> X-Signature header value
+      Note right of Webhook Receiver: 1) sign event payload with<br>notification rule secret <br> <br>2) compare resulting signature with<br> `X-Signature` header value received with the webhook call
 
       Note over Webhook Receiver: Process event ...
     end
@@ -142,6 +142,8 @@ As your webhook receiver needs to be exposed to the public internet for it to wo
 This secret is created when you set up the rule in the [third step above](#3-configure-webhook-rule). The secret will typically be kept in an environment variable (or some secret configuration storage) as not to hardcode it in the server implementation.
 
 Additional details and code samples can be found [here](https://hookdeck.com/webhooks/guides/how-to-implement-sha256-webhook-signature-verification#go-example) and [here](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries#validating-webhook-deliveries).
+
+An example for validating the `X-Signature` used by gridX can be found [here](./examples/go-secret-verification/README.md).
 
 ### :bento: Samples
 
