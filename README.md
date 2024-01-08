@@ -96,7 +96,7 @@ curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifi
 ```
 
 To verify your rule was created, you can retrieve the current rules from the API.
-Please note the `id` property of the rule you just created.
+Please note the `id` and `secret` properties of the rule you just created.
 
 ```sh
 curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifications/rules \
@@ -116,6 +116,13 @@ curl -X DELETE \
   --header 'accept: application/vnd.gridx.v2+json' \
   --header 'content-type: application/json'
 ```
+
+### :closed_lock_with_key: Security
+
+As your webhook receiver needs to be exposed to the public internet for it to work, you need to make sure to process only requests sent by gridX. This is done by verifying the `X-Signature` (or `X-Signature-Rs256`) headers in incoming requests were signed using the notification rule's secret.
+This secret is created when you set up the rule in the [third step above](#3-configure-webhook-rule). The secret will typically be kept in an environment variable (or some secret configuration storage) as not to hardcode it in the server implementation.
+
+Additional details and code samples can be found [here](https://hookdeck.com/webhooks/guides/how-to-implement-sha256-webhook-signature-verification#go-example).
 
 ### :bento: Samples
 
