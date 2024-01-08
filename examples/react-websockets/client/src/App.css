@@ -1,0 +1,43 @@
+.App {
+}
+
+h2 {
+ margin-top: 0;
+ margin-bottom: 0.25em;
+}
+.systems {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 0;
+}
+.system {
+  border: 1px solid gray;
+  border-radius: 0.5em;
+  margin: 0.125em;
+  padding: 2px;
+  width: 24vw;
+}
+.systemName {
+  text-align: center;
+}
+.appliances {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 1 0;
+  justify-content: space-between;
+}
+.appliance {
+  margin: 2px;
+  text-align: center;
+  padding: 0.25em;
+  border-radius: 0.5em;
+  width: 11vw;
+}
+
+.online {
+  background-color: rgba(100, 255, 100, 0.5);
+}
+
+.offline {
+  background-color: rgba(255, 100, 100, 0.5);;
+}
