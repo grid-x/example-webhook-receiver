@@ -38,7 +38,6 @@ To be able to receive events from gridX, you need to ...
 
 ```mermaid
 sequenceDiagram
-sequenceDiagram
     Actor developer
     alt development time
       developer->>gridX: Setup webhook notification rule
