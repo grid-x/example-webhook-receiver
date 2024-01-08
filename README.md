@@ -129,6 +129,7 @@ Additional details and code samples can be found [here](https://hookdeck.com/web
 * [NodeJS/Express](./examples/node-express/README.md): Hand-written webhook receiver that writes the IDs of appliances coming online to the console.
 * [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`.[^1]
 * [Python/aiohttp](./examples/python-aiohttp/README.md): Server with stubs for all supported event types generated using `openapi-generator`. For the sample, we print information about `appliance/online` events.[^2]
+* [Reactive Webapp](./examples/react-websockets/README.md): A webhook receiver that relays events to a React client app through websockets
 
 ### :factory: Generating Server Stubs
 
