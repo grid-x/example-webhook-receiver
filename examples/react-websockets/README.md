@@ -1,9 +1,9 @@
 # Reactive Webapp
 
 This example implements a simple Express based server to receive events from gridX through webhooks.
-It forwards each events to a client app using websockets, to implement a fully reactive pattern instead of relying on polling.
+It forwards each event it receives from the webhook to a client app using websockets, thus implementing a fully reactive pattern instead of relying on polling.
 
-This sample displays a dashboard of online and offline appliances grouped by system. In a real world implementation, you would not only rely on the events to build up the client's state. Instead, you would initially poll the status of the systems and appliances you're interested in initially and then update this state based on the events. This will make the data shown in your app more current while probably simplifying state updates and reduce the required traffic.
+The sample displays a dashboard of online and offline appliances grouped by system. In a real world implementation, you would not only rely on the events to build up the client's state. Instead, you would initially poll the status of the systems and appliances you're interested in initially and then update this state based on the events. This will make the data shown in your app more current while probably simplifying state updates and reduce the required traffic.
 
 ```mermaid
 sequenceDiagram
