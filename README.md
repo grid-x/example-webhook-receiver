@@ -36,6 +36,25 @@ To be able to receive events from gridX, you need to ...
 3. ... configure a webhook rule in XENON
 4. ... remove the webhook rule after you're done with testing
 
+```mermaid
+sequenceDiagram
+sequenceDiagram
+    Actor developer
+    alt development time
+      developer->>gridX: Setup webhook notification rule
+      developer->>gridX: Get notification rules
+      gridX->>developer: Notification rules<br>and secrets
+    end
+
+    alt run time
+      gridX->>+Webhook Receiver: Webhook Event
+      Webhook Receiver->>Webhook Receiver: Verify signature
+      Note right of Webhook Receiver: 1) sign event payload with<br>notification rule secret <br> <br>2) compare resulting signature with<br> `X-Signature` header value received with the webhook call
+
+      Note over Webhook Receiver: Process event ...
+    end
+```
+
 #### 1. Run a sample webhook receiver
 
 Pick one of the samples below to run and start the server according to the corresponding README.
@@ -122,13 +141,16 @@ curl -X DELETE \
 As your webhook receiver needs to be exposed to the public internet for it to work, you need to make sure to process only requests sent by gridX. This is done by verifying the `X-Signature` (or `X-Signature-Rs256`) headers in incoming requests were signed using the notification rule's secret.
 This secret is created when you set up the rule in the [third step above](#3-configure-webhook-rule). The secret will typically be kept in an environment variable (or some secret configuration storage) as not to hardcode it in the server implementation.
 
-Additional details and code samples can be found [here](https://hookdeck.com/webhooks/guides/how-to-implement-sha256-webhook-signature-verification#go-example).
+Additional details and code samples can be found [here](https://hookdeck.com/webhooks/guides/how-to-implement-sha256-webhook-signature-verification#go-example) and [here](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries#validating-webhook-deliveries).
+
+An example for validating the `X-Signature` used by gridX can be found [here](./examples/go-secret-verification/README.md).
 
 ### :bento: Samples
 
 * [NodeJS/Express](./examples/node-express/README.md): Hand-written webhook receiver that writes the IDs of appliances coming online to the console.
 * [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`.[^1]
 * [Python/aiohttp](./examples/python-aiohttp/README.md): Server with stubs for all supported event types generated using `openapi-generator`. For the sample, we print information about `appliance/online` events.[^2]
+* [Go Signature Verification](./examples/go-secret-verification/README.md): Example implementation of signature validation in go.
 * [Reactive Webapp](./examples/react-websockets/README.md): A webhook receiver that relays events to a React client app through websockets
 
 ### :factory: Generating Server Stubs
