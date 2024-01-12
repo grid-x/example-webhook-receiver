@@ -2,9 +2,8 @@ import "./App.css";
 
 import { useState, useEffect } from "react";
 
-const socket = new WebSocket("ws://localhost:8088");
-
 // Connect to websocket server
+const socket = new WebSocket("ws://localhost:8088");
 socket.addEventListener("open", (event) => {
   socket.send("Connection established");
 });
@@ -24,10 +23,14 @@ function App() {
     const payload = JSON.parse(event.data);
 
     if (systems[payload.gatewayID]) {
+      // we've already seen the system,
+      // so we need to update it's appliances
       const appliances = systems[payload.gatewayID].appliances;
       appliances[payload.applianceID] = payload;
       systems.appliances = appliances;
     } else {
+      // this is the first time we see the system,
+      // so we create it with the one appliance from the event
       systems[payload.gatewayID] = {
         gatewayID: payload.gatewayID,
         systemName: payload.systemName,
@@ -37,7 +40,7 @@ function App() {
       };
     }
 
-    setSystems({ ...systems });
+    setSystems({ ...systems }); // need to spread into a new object so React sees the update
   };
 
   return (
@@ -75,6 +78,8 @@ const Appliance = ({ appliance }) => (
     {appliance.manufacturer}
     <br />
     {appliance.model}
+    <br />
+    <span className="applianceId">{appliance.applianceID}</span>
   </div>
 );
 

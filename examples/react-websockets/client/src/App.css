@@ -34,6 +34,11 @@ h2 {
   width: 11vw;
 }
 
+.applianceId {
+  color:grey;
+  font-size: .25em;
+}
+
 .online {
   background-color: rgba(100, 255, 100, 0.5);
 }
