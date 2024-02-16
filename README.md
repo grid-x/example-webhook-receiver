@@ -123,6 +123,25 @@ curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifi
   --header 'content-type: application/json'
 ```
 
+> [!NOTE]  
+> 
+> To get your user and account ID, you can call `https://api.gridx.de/user` with your API token. In the response, `id` is the user ID, `accountID` the account ID (d'uh). For details, please refer [to the API reference for `GET /user`](https://developer.gridx.ai/reference/get_user).
+>
+>```sh
+>$ curl 'https://api.gridx.de/user' \
+>    -H"authorization: Bearer $GRIDX_TOKEN" \
+>    | jq '{"userID":.id, accountID}' ⮐
+>...
+>{
+>  "userID": "...",
+>  "accountID": "..."
+>}
+>```
+>
+> Alternatively, you can search for your user in XENON and look up the Account ID under `Settings -> Account Settings`:
+> 
+> ![Search User in XENON](./lookup-user-xenon.png)
+
 #### 4. Clean up rules created for testing
 
 After testing, please remember to remove the rule again to prevent continuous failures due to failed event deliveries.
