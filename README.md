@@ -130,7 +130,12 @@ curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifi
 >```sh
 >$ curl 'https://api.gridx.de/user' \
 >    -H"authorization: Bearer $GRIDX_TOKEN" \
->    | jq '{"userID":.id, accountID}'
+>    | jq '{"userID":.id, accountID}' ⮐
+>...
+>{
+>  "userID": "...",
+>  "accountID": "..."
+>}
 >```
 >
 > Alternatively, you can search for your user in XENON and look up the Account ID under `Settings -> Account Settings`:
