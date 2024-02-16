@@ -2,9 +2,8 @@ import "./App.css";
 
 import { useState, useEffect } from "react";
 
-const socket = new WebSocket("ws://localhost:8088");
-
 // Connect to websocket server
+const socket = new WebSocket("ws://localhost:8088");
 socket.addEventListener("open", (event) => {
   socket.send("Connection established");
 });
@@ -24,44 +23,63 @@ function App() {
     const payload = JSON.parse(event.data);
 
     if (systems[payload.gatewayID]) {
-      systems[payload.gatewayID].appliances = [...systems[payload.gatewayID].appliances, payload];
+      // we've already seen the system,
+      // so we need to update it's appliances
+      const appliances = systems[payload.gatewayID].appliances;
+      appliances[payload.applianceID] = payload;
+      systems.appliances = appliances;
     } else {
+      // this is the first time we see the system,
+      // so we create it with the one appliance from the event
       systems[payload.gatewayID] = {
         gatewayID: payload.gatewayID,
         systemName: payload.systemName,
-        appliances: [payload],
+        appliances: {
+          [payload.applianceID]: payload,
+        },
       };
     }
 
-    setSystems({ ...systems });
+    setSystems({ ...systems }); // need to spread into a new object so React sees the update
   };
-
 
   return (
     <div className="App">
       <div className="systems">
-        {Object.values(systems).map((system) => (
-          <System system={system} key={system.gatewayID}/>
-        ))}
+        {systems &&
+          Object.values(systems).map(
+            (system) =>
+              system.gatewayID && (
+                <System system={system} key={system.gatewayID} />
+              )
+          )}
       </div>
     </div>
   );
 }
 
 const System = ({ system }) => (
-  <div className="system">
+  <div className="system" id={system.gatewayID}>
     <div className="systemName">{system.systemName}</div>
     <div className="appliances">
-      {system.appliances?.map((appliance) => (
-        <Appliance appliance={appliance} key={appliance.applianceID}/>
-      ))}
+      {system.appliances &&
+        Object.values(system.appliances)?.map((appliance) => (
+          <Appliance appliance={appliance} key={appliance.applianceID} />
+        ))}
     </div>
   </div>
 );
 
 const Appliance = ({ appliance }) => (
-  <div className={`appliance ${appliance.online ? "online" : "offline"}`}>
-    {appliance.manufacturer}<br/>{appliance.model}
+  <div
+    id={appliance.applianceID}
+    className={`appliance ${appliance.online ? "online" : "offline"}`}
+  >
+    {appliance.manufacturer}
+    <br />
+    {appliance.model}
+    <br />
+    <span className="applianceId">{appliance.applianceID}</span>
   </div>
 );
 
