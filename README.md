@@ -95,7 +95,7 @@ You need the following data to call the API:
 <details>
   <summary>How to find my user and account ID?</summary>
 
-  To get your user and account ID, you can call `https://api.gridx.de/user` with your API token. In the response, `id` is the user ID, `accountID` the account ID (d'uh).
+  To get your user and account ID, you can call `https://api.gridx.de/user` with your API token. In the response, `id` is the user ID, `accountID` the account ID (d'uh). For details, please refer [to the API reference for `GET /user`](https://developer.gridx.ai/reference/get_user).
 
 ```sh
 $ curl 'https://api.gridx.de/user' \
