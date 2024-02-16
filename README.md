@@ -92,6 +92,22 @@ You need the following data to call the API:
 * The external webhook receiver URL. During development, this will be the external `ngrok` URL.
 * The event type you want to receive. See above for the complete list of supported events.
 
+<details>
+  <summary>How to find my user and account ID?</summary>
+
+  To get your user and account ID, you can call `https://api.gridx.de/user` with your API token. In the response, `id` is the user ID, `accountID` the account ID (d'uh).
+
+```sh
+$ curl 'https://api.gridx.de/user' \
+    -H"authorization: Bearer $GRIDX_TOKEN" \
+    | jq '{"userID":.id, accountID}'
+```
+
+  Alternatively, you can search for your user in XENON and look up the Account ID under `Settings -> Account Settings`.
+
+  ![Search User in XENON](./lookup-user-xenon.png)
+</details>
+
 _register-appliance-online-webhook.json_
 
 ```json
