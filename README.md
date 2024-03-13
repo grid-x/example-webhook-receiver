@@ -44,12 +44,12 @@ sequenceDiagram
       developer->>gridX: Get notification rules
       gridX->>developer: Notification rules<br>and secrets
     end
-
     alt run time
       gridX->>+Webhook Receiver: Webhook Event
       Webhook Receiver->>Webhook Receiver: Verify signature
-      Note right of Webhook Receiver: 1) sign event payload with<br>notification rule secret <br> <br>2) compare resulting signature with<br> `X-Signature` header value received with the webhook call
-
+      
+      Note right of Webhook Receiver: sign event payload with<br>notification rule secret 
+      Note right of Webhook Receiver: compare resulting signature with<br> `X-Signature` header value <br> received with the webhook call
       Note over Webhook Receiver: Process event ...
     end
 ```
