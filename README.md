@@ -22,7 +22,7 @@ This repository contains sample webhook receiver implementations and instruction
 
 ## :toolbox: Prerequisites
 
-* [for local development] [`ngrok`](https://ngrok.com/) to expose the locally running webhook receiver to the internet. You need to [sign up](https://ngrok.com/signup) for a free `ngrok` account and [connect it](https://dashboard.ngrok.com/get-started/setup/macos) to be able to use it.
+* [for local development] [`zrok`](https://docs.zrok.io) to expose the locally running webhook receiver to the internet. Just follow the [getting started guide](https://docs.zrok.io/docs/getting-started/) to publicly share your locally hosted server.
 * [for server scaffold generation] [`openapi-generator`](https://openapi-generator.tech/) can be used to generate server stubs for different languages.
 
 ## :bookmark_tabs: Usage
@@ -32,7 +32,7 @@ This repository contains sample webhook receiver implementations and instruction
 To be able to receive events from gridX, you need to ...
 
 1. ... run a webhook receiver from either of the samples below
-2. ... expose the server to the internet using `ngrok`
+2. ... expose the server to the internet using `zrok`
 3. ... configure a webhook rule in XENON
 4. ... remove the webhook rule after you're done with testing
 
@@ -74,11 +74,11 @@ curl -X POST localhost:8080/gridx/events/appliance/online -d '{}'
 
 #### 2. Expose the Server to the internet
 
-All sample servers will start on port `:8080`. Run one of the examples below as described in the corresponding README and set up routing through ngrok: `ngrok http 8080`
+All sample servers will start on port `:8080`. Run one of the examples below as described in the corresponding README and set up routing through zrok: `zrok share public http://localhost:8080`
 
 This will set up a publicly accessible tunnel to the server running locally and show you the target URL required in the next step.
 
-After setting up the `ngrok` tunnel, you can use the [local ngrok console](http://127.0.0.1:4040/inspect/http) to inspect incoming events.
+After setting up the `zrok` tunnel, you can use the [zrok web page](https://api.zrok.io/) to monitor incoming requests.
 
 #### 3. Configure Webhook Rule
 
@@ -89,7 +89,7 @@ You need the following data to call the API:
 * The account id for which you want to receive event notifications (from XENON account details page)
 * The user id for which you want to receive event notifications (from your user details page on XENON). This is typically an administrative user for the resp. account
 * Your API token (from your XENON user settings)
-* The external webhook receiver URL. During development, this will be the external `ngrok` URL.
+* The external webhook receiver URL. During development, this will be the external `zrok` URL.
 * The event type you want to receive. See above for the complete list of supported events.
 
 _register-appliance-online-webhook.json_

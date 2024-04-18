@@ -2,7 +2,7 @@
   "eventType": "appliance/online",
   "notificationType": {
       "webhook": {
-      "targetURL": "<your ngrok URL>/gridx/events/appliance/online"
+      "targetURL": "<your zrok URL>/gridx/events/appliance/online"
     }
   }
 }

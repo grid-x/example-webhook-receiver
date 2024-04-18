@@ -18,12 +18,12 @@ sequenceDiagram
 
 ## Prerequisites
 
-To run this sample, you need to have `NodeJS` and `yarn` as well as `ngrok` installed.
+To run this sample, you need to have `NodeJS` and `yarn` as well as `zrok` installed.
 
 ## Usage
 
 1. Start the webhook receiver/websocket server: `$ cd server; yarn && yarn start`
-2. Expose `:8080` through `ngrok` as described in the [project's README](../../README.md#2-expose-the-server-to-the-internet)
+2. Expose `:8080` through `zrok` as described in the [project's README](../../README.md#2-expose-the-server-to-the-internet)
 3. Set up notification rules for `applicance/online` and `appliance/offline` events as described in the [project's README](../../README.md#3-configure-webhook-rule)
 4. Start the client app: `$ cd client; yarn && yarn start`
 5. Open http://localhost:3000, lean back and watch the appliance states roll in
