@@ -19,11 +19,16 @@ import (
 // This service should implement the business logic for every endpoint for the WebhookReceiverAPI API.
 // Include any external packages or services that will be required by this service.
 type WebhookReceiverAPIService struct {
+	statusChangeCounter CountStatusChange
+}
+
+type CountStatusChange interface {
+	Increment(id string, status string)
 }
 
 // NewWebhookReceiverAPIService creates a default api service
-func NewWebhookReceiverAPIService() WebhookReceiverAPIServicer {
-	return &WebhookReceiverAPIService{}
+func NewWebhookReceiverAPIService(counter CountStatusChange) WebhookReceiverAPIServicer {
+	return &WebhookReceiverAPIService{statusChangeCounter: counter}
 }
 
 // EventsApplianceCreatePost - Webhook Receiver
@@ -229,6 +234,6 @@ func (s *WebhookReceiverAPIService) EventsInverterStatusPost(ctx context.Context
 
 	// TODO: Uncomment the next line to return response Response(503, {}) or use other options such as http.Ok ...
 	// return Response(503, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("EventsInverterStatusPost method not implemented")
+	s.statusChangeCounter.Increment(inverterStatusEvent.Data.ApplianceID, inverterStatusEvent.Data.Status)
+	return Response(http.StatusAccepted, inverterStatusEvent), errors.New("EventsInverterStatusPost method not implemented")
 }

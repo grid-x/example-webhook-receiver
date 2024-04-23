@@ -10,16 +10,46 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	openapi "github.com/GIT_USER_ID/GIT_REPO_ID/go"
 )
 
+func (c CountStatusChange) Increment(id string, status string) {
+	_, ok := c[id]
+	if !ok {
+		c[id] = StatusChange{}
+	}
+
+	statusChange := c[id]
+	statusChange.counter = statusChange.counter + 1
+	statusChange.inverterStatus = append(statusChange.inverterStatus, status)
+	c[id] = statusChange
+
+	for k, v := range c {
+		statuses := strings.Join(v.inverterStatus, ",")
+		fmt.Printf("applianceID: %s, inverterStatus: %s, counter: %d", k, statuses, v.counter)
+		fmt.Println()
+	}
+	fmt.Println()
+}
+
+type CountStatusChange map[string]StatusChange
+
+type StatusChange struct {
+	inverterStatus []string
+	counter        int
+}
+
 func main() {
 	log.Printf("Server started")
 
-	WebhookReceiverAPIService := openapi.NewWebhookReceiverAPIService()
+	var counter CountStatusChange
+	counter = make(map[string]StatusChange)
+	WebhookReceiverAPIService := openapi.NewWebhookReceiverAPIService(counter)
 	WebhookReceiverAPIController := openapi.NewWebhookReceiverAPIController(WebhookReceiverAPIService)
 
 	router := openapi.NewRouter(WebhookReceiverAPIController)
