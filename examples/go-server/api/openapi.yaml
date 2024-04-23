@@ -447,6 +447,25 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          serialNumber: "9312355"
+          systemName: ExampleSystem
+          kind: BATTERY
+          name: ExampleMeter
+          model: Baz
+          type: METER
+          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          manufacturer: Iskraemeco
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: appliance/create
       title: Event appliance/create
     ApplianceOfflineEvent:
       allOf:
@@ -461,6 +480,25 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          serialNumber: "9312355"
+          systemName: ExampleSystem
+          kind: BATTERY
+          name: ExampleMeter
+          model: Baz
+          type: METER
+          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          manufacturer: Iskraemeco
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: appliance/offline
       title: Event appliance/offline
     ApplianceOnlineEvent:
       allOf:
@@ -475,6 +513,25 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          serialNumber: "9312355"
+          systemName: ExampleSystem
+          kind: BATTERY
+          name: ExampleMeter
+          model: Baz
+          type: METER
+          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          manufacturer: Iskraemeco
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: appliance/online
       title: Event appliance/online
     InverterStatusEvent:
       allOf:
@@ -489,6 +546,29 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          serialNumber: "9312355"
+          kind: BATTERY
+          type: METER
+          lastErrCode: F71A
+          manufacturer: Iskraemeco
+          systemName: ExampleSystem
+          errCode: errCode
+          name: ExampleMeter
+          model: Baz
+          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          lastStatus: ERROR
+          status: OK
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: inverter/status
       title: Event inverter/status
     GatewayCreateEvent:
       allOf:
@@ -503,6 +583,23 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          gatewaySerialnumber: D403-007-000-000-001-B-X
+          systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
+          systemName: ExampleSystem
+          gatewayName: My gridBox
+          userMail: max.mustermann@muster.de
+          userName: Max Mustermann
+          userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+          gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: gateway/create
       title: Event gateway/create
     GatewayOfflineEvent:
       allOf:
@@ -517,6 +614,23 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          gatewaySerialnumber: D403-007-000-000-001-B-X
+          systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
+          systemName: ExampleSystem
+          gatewayName: My gridBox
+          userMail: max.mustermann@muster.de
+          userName: Max Mustermann
+          userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+          gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: gateway/offline
       title: Event gateway/offline
     GatewayOnlineEvent:
       allOf:
@@ -531,6 +645,23 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          gatewaySerialnumber: D403-007-000-000-001-B-X
+          systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
+          systemName: ExampleSystem
+          gatewayName: My gridBox
+          userMail: max.mustermann@muster.de
+          userName: Max Mustermann
+          userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+          gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: gateway/online
       title: Event gateway/online
     EVPluggedEvent:
       allOf:
@@ -559,9 +690,32 @@ components:
         required:
         - type
         type: object
+      example:
+        specVersion: "1.0"
+        data:
+          customerAddress: "Straße Str. 1, 20359, Hamburg, Germany"
+          gatewaySerialnumber: D403-007-000-000-001-B-X
+          systemName: Test system
+          customerEmail: test@email.com
+          customerID: 1a81c4f4-5f6c-48e6-be91-2528c1c0bb28
+        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        dataContentType: application/json
+        type: commissioning/done
       title: Event commissioning/done
     GatewayEventData:
       description: Payload for `gateway/*` events.
+      example:
+        gatewaySerialnumber: D403-007-000-000-001-B-X
+        systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
+        systemName: ExampleSystem
+        gatewayName: My gridBox
+        userMail: max.mustermann@muster.de
+        userName: Max Mustermann
+        userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+        gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
       properties:
         gatewayID:
           description: The ID of the gateway this event is triggered for.
@@ -604,6 +758,17 @@ components:
       type: object
     ApplianceEventData:
       description: Payload for `appliance/*` events.
+      example:
+        applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+        systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+        serialNumber: "9312355"
+        systemName: ExampleSystem
+        kind: BATTERY
+        name: ExampleMeter
+        model: Baz
+        type: METER
+        gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+        manufacturer: Iskraemeco
       properties:
         applianceID:
           description: ID of the appliance that caused this event.
@@ -715,6 +880,21 @@ components:
         type: object
       description: |
         Payload for `inverter/*` events. The event describes the change of an inverter from one status to a new one. The old status is referred to as the lastStatus.
+      example:
+        applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
+        systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+        serialNumber: "9312355"
+        kind: BATTERY
+        type: METER
+        lastErrCode: F71A
+        manufacturer: Iskraemeco
+        systemName: ExampleSystem
+        errCode: errCode
+        name: ExampleMeter
+        model: Baz
+        gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+        lastStatus: ERROR
+        status: OK
     EVEventData:
       allOf:
       - $ref: '#/components/schemas/ApplianceEventData'
@@ -736,6 +916,12 @@ components:
         Payload for `ev/*` events. The event describes the change of an EV's state at a charging station.
     CommissioningData:
       description: Payload for `commissioning/done` events.
+      example:
+        customerAddress: "Straße Str. 1, 20359, Hamburg, Germany"
+        gatewaySerialnumber: D403-007-000-000-001-B-X
+        systemName: Test system
+        customerEmail: test@email.com
+        customerID: 1a81c4f4-5f6c-48e6-be91-2528c1c0bb28
       properties:
         customerID:
           description: The ID of the newly created customer after the commissioning
