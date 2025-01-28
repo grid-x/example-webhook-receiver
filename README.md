@@ -15,6 +15,8 @@ Currently, the following event types being emitted:
 * `gateway/online`: Gateway went online
 * `ev/plugged`: Vehicle was plugged into the charging station, charging state changed
 * `commissioning/done`: Commissioning of a gateway was completed
+* `grid-signal-processor/limitation-of-power-consumption/set`: The grid signal processor has set a new limitation of power consumption
+* `grid-signal-processor/limitation-of-power-consumption/unset`: The grid signal processor has unset a new limitation of power consumption
 
 If you want to learn more, [GitHub has a nice intro about webhooks](https://docs.github.com/en/webhooks/about-webhooks).
 
