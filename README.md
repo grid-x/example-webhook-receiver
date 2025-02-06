@@ -101,7 +101,8 @@ _register-appliance-online-webhook.json_
     "eventType": "appliance/online",
     "notificationType": {
         "webhook": {
-        "targetURL": "<webhook receiver URL>"
+        "targetURL": "<webhook receiver URL>",
+        "secret": "<your very secret secret>"
       }
     }
 }
