@@ -56,8 +56,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	signer := hmac.NewSigner(secretKey)
-	if err := signer.Sign(req); err != nil {
+	requestSigner := hmac.NewRequestSigner([]string{secretKey})
+	if err := requestSigner.Sign(req); err != nil {
 		log.Fatal(err)
 	}
 

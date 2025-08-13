@@ -16,9 +16,9 @@ func main() {
 		log.Fatalf("environment variable HMAC_SECRET_KEY must be set")
 	}
 
-	verifier := hmac.NewVerifier(secretKey)
+	requestVerifier := hmac.NewRequestVerifier(secretKey)
 
-	http.HandleFunc("/hooks/xenon", verifier.Middleware(handler))
+	http.HandleFunc("/hooks/xenon", requestVerifier.Middleware(handler))
 
 	slog.Info("Listening on port 8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
