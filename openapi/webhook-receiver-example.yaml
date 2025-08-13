@@ -1,0 +1,57 @@
+openapi: 3.0.0
+info:
+  title: Example XENON webhook receiver
+  contact:
+    name: gridX
+    url: https://www.gridx.ai/module/api
+    email: developer-community@gridx.de
+  license:
+    name: All rights reserved.
+    url: https://www.gridx.ai/
+  version: v1.0.0
+  description: |-
+    This is an example webhook receiver for XENON.
+servers:
+  - url: https://your.domain
+    description: production
+    variables: {}
+  - url: https://your.staging.domain
+    description: staging
+    variables: {}
+paths:
+  /hooks/xenon:
+    description: The path is just an example. Pick whatever path suits you best.
+    post:
+      operationId: processXenonWebhookEvent
+      description: Processes a XENON webhook event.
+      parameters:
+        - $ref: 'webhook-events.yaml#/components/parameters/XSignature'
+      requestBody:
+        $ref: 'webhook-events.yaml#/components/requestBodies/WebhookEvent'
+      responses:
+        '200':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventSuccess'
+        '201':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventSuccess'
+        '202':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventSuccess'
+        '204':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventSuccess'
+        '401':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventUnauthenticated'
+        '410':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventReceiverGone'
+        '408':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventTransientError'
+        '429':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventTransientError'
+        '500':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventTransientError'
+        '502':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventTransientError'
+        '503':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventTransientError'
+        '504':
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventTransientError'
+        default:
+          $ref: 'webhook-events.yaml#/components/responses/WebhookEventPermanentError'

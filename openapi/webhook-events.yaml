@@ -1,0 +1,667 @@
+###
+# Webhook Events
+###
+components:
+  parameters:
+    XSignature:
+      name: X-Signature
+      in: header
+      required: true
+      description: HMAC-SHA-512 digest(s) for request integrity verification.
+      schema:
+        type: string
+        pattern: ^sha512=[0-9a-fA-F]{128}(?:,\s?sha512=[0-9a-fA-F]{128})*$
+        description: |-
+          Can contain one or more digests, separated by a comma and a space (`, `). Each signature is prefixed with 
+          `sha512=`.
+        example: |-
+          sha512=8e974e6f477383a8b27785a9c24098c1f96420377a06a6c0b396e67e37604d55b0a32d163f8202518e388d1d86d649d214c770d1820641042456578051613045
+  requestBodies:
+    WebhookEvent:
+      description: "Forwards an event to a webhook subscription's target URL."
+      required: true
+      content:
+        application.json:
+          schema:
+            $ref: '#/components/schemas/WebhookEventRequest'
+  responses:
+    WebhookEventSuccess:
+      description: The webhook event has been processed successfully.
+    WebhookEventReceiverGone:
+      description: |-
+        The webhook receiver has been decommissioned and its webhook subscription should be deleted.
+    WebhookEventUnauthenticated:
+      description: HMAC digest verification failed for the request.
+    WebhookEventTransientError:
+      description: |-
+        The request failed with a transient error and will be retried five times with exponential backoff.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArbitraryErrorResponse'
+    WebhookEventPermanentError:
+      description: |-
+        The request failed with a permanent error and won't be retried.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArbitraryErrorResponse'
+  schemas:
+    ArbitraryErrorResponse:
+      type: object
+      additionalProperties: true
+      description: Optional arbitrary JSON data.
+      nullable: true
+    WebhookEventBase:
+      type: object
+      description: |-
+        Representation of an event in a gridX account. Follows the [CloudEvents v1.0.1 specification](
+        https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).
+      required:
+        - id
+        - accountID
+        - source
+        - specVersion
+        - time
+        - type
+        - data
+      properties:
+        id:
+          format: uuid
+          type: string
+          description: The unique ID of the event instance.
+        time:
+          description: Time when the event has occurred in RFC3339 format.
+          format: date-time
+          type: string
+        dataContentType:
+          default: application/json
+          description: |-
+            Content-Type indicating how to parse the `data` attribute.
+            Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
+          enum:
+            - application/json
+          example: application/json
+          type: string
+        specVersion:
+          description: |-
+            The adhered CloudEvents specification version, currently "1.0".
+            Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.
+          example: "1.0"
+          type: string
+        source:
+          description: |-
+            The source of the event is usually a resource identifier path that can be used to identify the object which
+            triggered the event.
+          example: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+          type: string
+        userID:
+          type: string
+          format: uuid
+          description: UserID is the ID of the user that triggered the event.
+        correlationID:
+          description: Correlation ID to identify the request triggering the event.
+          format: uuid
+          type: string
+        type:
+          description: The type of the event.
+          type: string
+        data:
+          description: Contains the actual event payload. Deserialize depending on the `type` property.
+          type: object
+    WebhookEventRequest:
+      oneOf:
+        - $ref: '#/components/schemas/ApplianceEvent'
+        - $ref: '#/components/schemas/EVEnodeEvent'
+        - $ref: '#/components/schemas/EVControlEvent'
+        - $ref: '#/components/schemas/EVMeasurementEvent'
+        - $ref: '#/components/schemas/EVPluggedEvent'
+        - $ref: '#/components/schemas/EVChargeSessionEvent'
+        - $ref: '#/components/schemas/GatewayEvent'
+        - $ref: '#/components/schemas/GSP14aSignalEvent'
+        - $ref: '#/components/schemas/InverterEvent'
+        - $ref: '#/components/schemas/PingEvent'
+        - $ref: '#/components/schemas/SystemActionEvent'
+      discriminator:
+        propertyName: type
+        mapping:
+          appliance/create: '#/components/schemas/ApplianceEvent'
+          appliance/delete: '#/components/schemas/ApplianceEvent'
+          appliance/offline: '#/components/schemas/ApplianceEvent'
+          appliance/online: '#/components/schemas/ApplianceEvent'
+          appliance/update: '#/components/schemas/ApplianceEvent'
+          ev/charge-started: '#/components/schemas/EVChargeSessionEvent'
+          ev/charge-stopped: '#/components/schemas/EVChargeSessionEvent'
+          ev/control: '#/components/schemas/EVControlEvent'
+          ev/create: '#/components/schemas/EVEnodeEvent'
+          ev/delete: '#/components/schemas/EVEnodeEvent'
+          ev/measurement: '#/components/schemas/EVMeasurementEvent'
+          ev/plugged: '#/components/schemas/EVPluggedEvent'
+          ev/unplugged: '#/components/schemas/EVPluggedEvent'
+          ev/update: '#/components/schemas/EVEnodeEvent'
+          gateway/create: '#/components/schemas/GatewayEvent'
+          gateway/offline: '#/components/schemas/GatewayEvent'
+          gateway/online: '#/components/schemas/GatewayEvent'
+          grid-signal-processor/limitation-of-power-consumption/set: '#/components/schemas/GSP14aSignalEvent'
+          grid-signal-processor/limitation-of-power-consumption/unset: '#/components/schemas/GSP14aSignalEvent'
+          inverter/status: '#/components/schemas/InverterEvent'
+          ping: '#/components/schemas/PingEvent'
+          system/action: '#/components/schemas/SystemActionEvent'
+    ApplianceEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - appliance/create
+                - appliance/delete
+                - appliance/offline
+                - appliance/online
+                - appliance/update
+            data:
+              $ref: '#/components/schemas/ApplianceEventData'
+    ApplianceEventData:
+      type: object
+      description: Payload for `appliance/*` events.
+      required:
+        - applianceID
+        - gatewayID
+        - systemID
+      properties:
+        applianceID:
+          description: ID of the appliance that caused this event.
+          example: fc0a6ac7-64ce-4276-a7cd-bace946af433
+          format: uuid
+          type: string
+        gatewayID:
+          description: The ID of the gateway that connects to the appliance.
+          example: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+          format: uuid
+          type: string
+        model:
+          description: Model description of the appliance.
+          example: ExampleModel
+          type: string
+        manufacturer:
+          description: Manufacturer of the appliance.
+          example: ExampleManufacturer
+          type: string
+        type:
+          description: General type of the appliance.
+          enum:
+            - UNKNOWN
+            - INVERTER
+            - METER
+            - EVSTATION
+            - HEAT_PUMP
+            - HEATER
+            - CONTAINER
+          example: METER
+          type: string
+        kind:
+          description: |-
+            Kind of the appliance is used to provide further details on the appliance configuration and mode of 
+            operation. 
+
+            The kind property is only available for appliances with type `INVERTER` or `METER`. 
+
+            For inverters, only `UNKNOWN`, `PV`, `BATTERY`, `HYBRID` and `PV_EXTERNAL` are valid values. They describe 
+            the kind of connected appliance(s) and define the role of the inverter in the system. 
+
+            For meters, kind specifies the appliance the meter is attached to. It resembles the location the meter is 
+            installed in.
+          enum:
+            - UNKNOWN
+            - PV
+            - BATTERY
+            - HYBRID
+            - PV_EXTERNAL
+            - GRID
+            - HEAT_PUMP
+            - FUEL_CELL
+            - HEAT_PUMP_EXTERNAL
+            - EVSTATION
+            - BTTP
+            - HEATING
+            - MISC
+            - CLUSTER
+            - WIND_TURBINE
+          example: BATTERY
+          type: string
+        name:
+          description: The name of the appliance as defined by the customer.
+          example: ExampleMeter
+          type: string
+        serialNumber:
+          description: Serial number of the appliance as returned by the appliance.
+          example: "9312355"
+          type: string
+        systemID:
+          description: The ID of the system that the gateway and appliance run in.
+          example: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+          format: uuid
+          type: string
+        systemName:
+          description: Name of the system as defined by the customer.
+          example: ExampleSystem
+          type: string
+    EVEventDataBase:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      type: object
+      description: Generic EVEvent.
+      required:
+        - systemID
+        - assetID
+        - gatewayID
+      properties:
+        systemID:
+          type: string
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
+    EVChargeSessionEvent:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/charge-started
+                - ev/charge-stopped
+            data:
+              $ref: '#/components/schemas/EVChargeSessionEventData'
+    EVChargeSessionEventData:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+        - $ref: '#/components/schemas/EVStateChangeEventData'
+        - required:
+            - state
+          properties:
+            state:
+              type: string
+              enum:
+                - CHARGING
+                - STOPPED
+              description: ChargeState defines whether the vehicle is charging
+    EVControlEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - deprecated: true
+          properties:
+            type:
+              type: string
+              enum:
+                - ev/control
+            data:
+              $ref: '#/components/schemas/EVControlEventData'
+    EVControlEventData:
+      # See https://github.com/grid-x/notifications/blob/master/pkg/events/event.go#L279
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+        - deprecated: true
+          required:
+            - eventPayload
+          properties:
+            eventPayload:
+              type: object
+              additionalProperties: true
+    EVEnodeEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - type: object
+          deprecated: true
+          properties:
+            type:
+              type: string
+              enum:
+                - ev/create
+                - ev/delete
+                - ev/update
+            data:
+              $ref: '#/components/schemas/EVEnodeEventData'
+    EVEnodeEventData:
+      # See https://github.com/grid-x/notifications/blob/master/pkg/events/event.go#L243
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+        - deprecated: true
+          required:
+            - enodeEventPayload
+          properties:
+            enodeEventPayload:
+              type: object
+              additionalProperties: true
+    EVMeasurementEvent:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/measurement
+            data:
+              $ref: '#/components/schemas/EVMeasurementEventData'
+    EVMeasurementEventData:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+        - $ref: '#/components/schemas/EVStateChangeEventData'
+        - type: object
+          description: Measurement event (issued by the EV)
+          required:
+            - chargePower
+          properties:
+            stateOfCharge:
+              type: number
+              description: |-
+                StateOfCharge specifies the vehicles battery level in as a value between
+                0.0% and 100.0%.
+            chargePower:
+              type: integer
+              format: int64
+              description: |-
+                ChargePower specifies the power with which the vehicle is currently
+                charging in mW Positive values mean charging, negative values mean
+                discharging (V2G, V2H).
+            range:
+              type: integer
+              format: uint32
+              description: Range of the vehicle in meters
+            chargeLimit:
+              type: number
+              format: double
+              description: |-
+                ChargeLimit is the limit configured by the vehicle owner at which state of
+                charge the vehicle should stop charging. Represented as a percentage
+                between 0% and 100%.
+            capacity:
+              type: integer
+              format: uint32
+              description: Capacity specifies the capacity of the vehicles battery in Wh.
+    EVPluggedEvent:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/plugged
+                - ev/unplugged
+            data:
+              $ref: '#/components/schemas/EVPluggedEventData'
+    EVPluggedEventData:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+        - $ref: '#/components/schemas/EVStateChangeEventData'
+        - type: object
+          required:
+            - state
+          properties:
+            state:
+              type: string
+              enum:
+                - PLUGGED
+                - UNPLUGGED
+              description: State defines whether the vehicle is currently plugged in
+    EVStateChangeEventData:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      type: object
+      required:
+        - state
+        - issuedAt
+        - atHome
+      properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: When the event was issued by the EV (It might take some time for the event reach us).
+        atHome:
+          type: boolean
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+      description: Generic State change event (issued by the EV)
+    GatewayEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - gateway/create
+                - gateway/offline
+                - gateway/online
+            data:
+              $ref: '#/components/schemas/GatewayEventData'
+    GatewayEventData:
+      type: object
+      title: Gateway event
+      description: Payload for `gateway/*` events.
+      required:
+        - gatewayID
+        - systemID
+      properties:
+        gatewayID:
+          description: The ID of the gateway this event is triggered for.
+          example: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
+          format: uuid
+          type: string
+        gatewayName:
+          description: The name of the gateway corresponding to the gatewayID.
+          example: My gridBox
+          type: string
+        gatewaySerialnumber:
+          description: The serialnumber of the gateway corresponding to the gatewayID.
+          example: D403-007-000-000-001-B-X
+          type: string
+        systemID:
+          description: The ID of the system this event is triggered for.
+          example: af87d7b3-316f-4d26-868c-4ae351095bdc
+          format: uuid
+          type: string
+        systemName:
+          description: The name of the system corresponding to the systemID.
+          example: ExampleSystem
+          type: string
+        userID:
+          description: The ID of the user that owns the system.
+          example: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+          format: uuid
+          type: string
+        userName:
+          description: Name of the user belonging to the userID.
+          example: Max Mustermann
+          type: string
+        userMail:
+          description: E-Mail address of the user belonging to the userID.
+          example: max.mustermann@muster.de
+          type: string
+    GSP14aSignalEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - grid-signal-processor/limitation-of-power-consumption/set
+                - grid-signal-processor/limitation-of-power-consumption/unset
+            data:
+              $ref: '#/components/schemas/GSP14aSignalEventData'
+    GSP14aSignalEventData:
+      type: object
+      title: Grid signal processor limitation of power consumption event
+      description: Payload for `grid-signal-processor/limitation-of-power-consumption/*` events.
+      properties:
+        newLPC:
+          type: number
+          format: float
+          description: |-
+            Represents the new limitation of power consumption in milliwatt. It can be omitted in case there was a limit 
+            and now there is not.
+        receivedAt:
+          type: string
+          format: date-time
+          description: Timestamp at which the gridbox received the control signal.
+        validUntil:
+          type: string
+          format: date-time
+          description: Timestamp until which the control signal is valid.
+    InverterEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - inverter/status
+            data:
+              $ref: '#/components/schemas/InverterEventData'
+    InverterEventData:
+      allOf:
+        - $ref: '#/components/schemas/ApplianceEventData'
+        - type: object
+          title: Inverter status event
+          description: |-
+            Payload for `inverter/*` events. 
+    
+            The event describes the change of an inverter from one status to a new one. The old status is referred to as the 
+            lastStatus.
+          required:
+            - lastStatus
+            - status
+          properties:
+            status:
+              description: Current (new) status of the inverter.
+              enum:
+                - UNKNOWN
+                - OK
+                - WARNING
+                - ERROR
+              example: OK
+              type: string
+            lastStatus:
+              description: Last status of the inverter.
+              enum:
+                - UNKNOWN
+                - OK
+                - WARNING
+                - ERROR
+              example: ERROR
+              type: string
+            errCode:
+              description: |-
+                Current (new) error code as returned by the appliance. The value depends on the appliance manufacturer, 
+                model and firmware. Please refer to the manufacturers specification.
+              type: string
+            lastErrCode:
+              description: |
+                Last error code as returned by the appliance. The value depends on the appliance manufacturer, model and 
+                firmware. Please refer to the manufacturers specification.
+              example: F71A
+              type: string
+    PingEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ping
+            data:
+              $ref: '#/components/schemas/PingEventData'
+    PingEventData:
+      type: object
+      description: Payload for `ping` events.
+      properties:
+        message:
+          type: string
+    SystemActionEvent:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ping
+            data:
+              $ref: '#/components/schemas/SystemActionEventData'
+    SystemActionEventData:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      type: object
+      required:
+        - id
+        - type
+        - manufacturer
+        - domain
+        - introducedAt
+        - resolution
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of the action.
+        type:
+          type: string
+          enum:
+            - EV
+          description: Type of asset.
+        manufacturer:
+          type: string
+          description: Manufacturer of the asset.
+          example: Audi
+        domain:
+          type: string
+          enum:
+            - Account
+            - Device
+          description: Describes whether the user action relates to the device itself or the vendor user account used to access the device.
+        introducedAt:
+          type: string
+          format: date-time
+          description: ISO8601 UTC timestamp of when the user action was introduced.
+        resolution:
+          type: object
+          properties:
+            description:
+              type: string
+              description: A localized description of how to solve. Formatted as Markdown.
+              example: To gain access to your vehicle's telemetry data, it's necessary to accept Audi's terms and conditions. Follow these steps to proceed:<br><br>1. Open the **myAudi app** on your phone<br>2. Follow the prompts to accept Audi's terms and conditions
+            title:
+              type: string
+              description: A localized title for the user action.
+              example: Accept the Audi terms and conditions
+            access:
+              type: string
+              enum:
+                - Remote
+                - Physical
+              description: Where the action needs to be taken. i.e. remotely using the vendor's app or directly in the vehicle.
+            agent:
+              type: string
+              enum:
+                - User
+                - ThirdParty
+              description: |-
+                Who can resolve the action. i.e. a user can resolve themselves,
+                or a licensed service retailer is needed.
+          required:
+            - description
+            - title
+            - access
+            - agent
