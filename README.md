@@ -301,7 +301,7 @@ response body as arbitrary JSON object and log it.
 
 > [!IMPORTANT]
 >
-> **This feature won't be in place yet on the 21.08.2025.**
+> **This feature won't be in place yet on 21 August 2025.**
 > 
 > We will only activate it, when the XENON dashboard supports subscribing to e-mail notifications for `webhook/failed` 
 > and `webhook/deactivated` events.
