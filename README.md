@@ -1,195 +1,490 @@
-# :spider_web: :hook: Example gridX Webhook Receivers
+# :spider_web: :hook: Integrating systems with the gridX webhook subscription API
 
-`Webhook Receivers` are used to get notifications about state changes in gridX/XENON within your app.
-A webhook receiver is a publicly accessible endpoint on a server that is called by gridX when domain events, e.g., when an appliance goes online, occur.
-By implementing a webhook receiver, you can react on these events within your custom application. This allows for push based delivery of events as opposed to your app having to pull gridX's API constantly.
+The webhook subscription API lets XENON users manage webhook subscriptions for an account.
 
-Currently, the following event types being emitted:
+## Migration from Notification Rule API
 
-* `appliance/create`: Appliance was created
-* `appliance/offline`: Appliance went offline
-* `appliance/online`: Appliance went online
-* `inverter/status`: Inverter status has changed
-* `gateway/create`: Gateway was created
-* `gateway/offline`: Gateway went offline
-* `gateway/online`: Gateway went online
-* `ev/plugged`: Vehicle was plugged into the charging station, charging state changed
-* `commissioning/done`: Commissioning of a gateway was completed
-* `grid-signal-processor/limitation-of-power-consumption/set`: The grid signal processor has set a new limitation of power consumption
-* `grid-signal-processor/limitation-of-power-consumption/unset`: The grid signal processor has unset a new limitation of power consumption
+> [!WARNING]
+> 
+> **Managing webhook subscriptions through the [Notification Rule API](
+> https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/users/-userID-/notifications/rules)
+> won't be supported anymore as of 21.08.2025.**
+> 
+> **The new [Webhook Subscription API](
+> https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks) should be 
+> used to manage webhook subscriptions from then on.**  
+> 
+> We will automatically migrate all existing webhook settings on notification rules to webhook subscriptions during this 
+> [maintenance window (21.08.2025 18:00-21:00)](
+> https://support.gridx.de/hc/de/articles/28369740677266--Wartungsfenster-am-Donnerstag-21-August-von-18-00-bis-21-00-Uhr-MEZ).
+>
+> For that, we will merge webhook settings with the same `accountID`, `targetURL` and `secret` into a single webhook 
+> subscription, as we now support subscribing to multiple event types at once.
+> 
+> As webhook subscriptions will be account-scoped after the migration window, you will find the migrated webhook subscriptions by calling the [`GET /accounts/{accountID}/webhooks` endpoint](
+> https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks). 
+> 
+> **All changes affect only management of webhook subscriptions. No changes will affect or break the actual webhook
+> receiver implementation.**
 
-If you want to learn more, [GitHub has a nice intro about webhooks](https://docs.github.com/en/webhooks/about-webhooks).
+The following table provide an overview of the changes migrating from the deprecated Notification Rule API to the new
+Webhook Subscription API.
 
-This repository contains sample webhook receiver implementations and instructions on how to generate receivers in a plethora of languages/frameworks to get you started.
+From 21.08.2025 on:
 
-## :toolbox: Prerequisites
+| Notification Rule API (deprecated)                                     | Webhook Subscription API                                                    |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| User-scoped: `/accounts/{acountID}/users/{userID}/notifications/rules` | Account-scoped: `/accounts/{accountID}/webhooks`                            |
+| Required policies: `AccountsUsersRead` and `AccountsUsersWrite`        | Required policies: `WebhooksRead` and `WebhooksWrite`                       |
+| Subscribes to one `eventType`.                                         | Subscribes to one or many `eventTypes`                                      |
+| Clients can upload their own HMAC secrets (without validation)         | Generates cryptographically strong HMAC secrets                             |
+| Signs requests only with one HMAC secret                               | Signs requests temporarily with multiple secrets for zero-downtime rotation |
+| -                                                                      | Supports sending `ping` events for integration testing                      |
+| -                                                                      | Property `active` can be used to pause a webhook subscription               |
+| -                                                                      | Improved performance due to decoupling from user notifications processing   |
 
-* [for local development] [`zrok`](https://docs.zrok.io) to expose the locally running webhook receiver to the internet. Just follow the [getting started guide](https://docs.zrok.io/docs/getting-started/) to publicly share your locally hosted server.
-* [for server scaffold generation] [`openapi-generator`](https://openapi-generator.tech/) can be used to generate server stubs for different languages.
+Planned future improvements - timeline will be announced on the [developer community](
+https://community.developer.gridx.de/tag/webhooks):
+- We will offer subscribing to e-mail notifications for `webhook/failed` and `webhook/deactivated` events in your XENON
+  account via the XENON dashboard.
+- We will automatically deactivate a webhook subscription after 10 consecutive failures.
+- We will offer querying failed invocation logs.
 
-## :bookmark_tabs: Usage
+Finally, find a comparison between the deprecated notification rule representation and the new webhook subscription 
+representation.
 
-### :incoming_envelope: Receiving Events from gridX
+<details>
 
-To be able to receive events from gridX, you need to ...
+<summary>Notification Rule (deprecated)</summary>
 
-1. ... run a webhook receiver from either of the samples below
-2. ... expose the server to the internet using `zrok`
-3. ... configure a webhook rule in XENON
-4. ... remove the webhook rule after you're done with testing
+**POST `/accounts/{acountID}/users/{userID}/notifications/rules`**
 
-```mermaid
-sequenceDiagram
-    Actor developer
-    alt development time
-      developer->>gridX: Setup webhook notification rule
-      developer->>gridX: Get notification rules
-      gridX->>developer: Notification rules<br>and secrets
-    end
-    alt run time
-      gridX->>+Webhook Receiver: Webhook Event
-      Webhook Receiver->>Webhook Receiver: Verify signature
-      
-      Note right of Webhook Receiver: sign event payload with<br>notification rule secret 
-      Note right of Webhook Receiver: compare resulting signature with<br> `X-Signature` header value <br> received with the webhook call
-      Note over Webhook Receiver: Process event ...
-    end
-```
-
-#### 1. Run a sample webhook receiver
-
-Pick one of the samples below to run and start the server according to the corresponding README.
-
-The NodeJS server, e.g., can be started like this.
-
-```sh
-cd examples/node-express
-yarn
-yarn start
-```
-
-You can test whether any of the example receivers is running by just posting an empty JSON against `localhost:8080/gridx/events/appliance/online`. You'll likely get an error message (depending on the sample), but can see that a connection was made.
-
-```sh
-curl -X POST localhost:8080/gridx/events/appliance/online -d '{}'
-```
-
-#### 2. Expose the Server to the internet
-
-All sample servers will start on port `:8080`. Run one of the examples below as described in the corresponding README and set up routing through zrok: `zrok share public http://localhost:8080`
-
-This will set up a publicly accessible tunnel to the server running locally and show you the target URL required in the next step.
-
-After setting up the `zrok` tunnel, you can use the [zrok web page](https://api.zrok.io/) to monitor incoming requests.
-
-#### 3. Configure Webhook Rule
-
-To be able to receive events, you first need to register a notification rule through the API for the events you wish to receive.
-
-You need the following data to call the API:
-
-* The account id for which you want to receive event notifications (from XENON account details page)
-* The user id for which you want to receive event notifications (from your user details page on XENON). This is typically an administrative user for the resp. account
-* Your API token (from your XENON user settings)
-* The external webhook receiver URL. During development, this will be the external `zrok` URL.
-* The event type you want to receive. See above for the complete list of supported events.
-
-_register-appliance-online-webhook.json_
-
+Request:
 ```json
 {
-    "eventType": "appliance/online",
-    "notificationType": {
-        "webhook": {
-        "targetURL": "<webhook receiver URL>"
-      }
+  "eventType": "appliance/online",
+  "notificationType": {
+    "webhook": {
+      "targetURL": "https://example.com/hooks/xenon",
+      "secret": "whsec_89d31d45a90e309f4e24b7..."
     }
+  },
+  "locale": "DE"
 }
 ```
 
-```sh
-curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifications/rules \
-  --header 'authorization: Bearer <your API token>' \
-  --header 'accept: application/vnd.gridx.v2+json' \
-  --header 'content-type: application/json' \
-  --data @register-appliance-online-webhook.json
+Response:
+```json
+{
+  "id": "49a4f165-8233-426b-a1a4-e569665a25dd",
+  "accountID": "49a4f165-8233-426b-a1a4-e569665a25dd",
+  "userID": "49a4f165-8233-426b-a1a4-e569665a25dd",
+  "eventType": "appliance/online",
+  "notificationType": {
+    "webhook": {
+      "targetURL": "https://example.com/hooks/xenon",
+      "secret": "whsec_89d31d45a90e309f4e24b7..."
+    }
+  },
+  "locale": "DE"
+}
 ```
 
-To verify your rule was created, you can retrieve the current rules from the API.
-Please note the `id` and `secret` properties of the rule you just created.
+</details>
 
-```sh
-curl https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifications/rules \
-  --header 'authorization: Bearer <your API token>' \
-  --header 'accept: application/vnd.gridx.v2+json' \
-  --header 'content-type: application/json'
+<details>
+
+<summary>Webhook susbcription</summary>
+
+**POST `/accounts/{acountID}/webhooks`**
+
+Request:
+```json
+{
+  "eventTypes": [
+    "appliance/online",
+    "appliance/offline"
+  ],
+  "targetURL": "https://example.com/hooks/xenon",
+  "active": false
+}
 ```
 
-> [!NOTE]  
+Response:
+```json
+{
+  "id": "49a4f165-8233-426b-a1a4-e569665a25dd",
+  "accountID": "49a4f165-8233-426b-a1a4-e569665a25dd",
+  "eventTypes": [
+    "appliance/online",
+    "appliance/offline"
+  ],
+  "targetURL": "https://example.com/hooks/xenon",
+  "active": false,
+  "secret": "whsec_89d31d45a90e309f4e24b7..."
+}
+```
+
+</details>
+
+The rest of this documentation will focus on how to implement and register webhook receivers on the Webhook Subscription
+API.
+
+## Overview
+
+The gridX webhook API lets you manage webhook subscriptions for an account on the gridX webhook API. A webhook 
+subscription subscribes to one or many event types in the referenced gridX account. If an event occurs with a type 
+matching any webhook subscription in that account, then this event will be sent to each matching webhook subscription's 
+target URL through an HTTP POST request. The web server listening on that target URL is called a webhook receiver.
+
+With this, webhook subscriptions are a powerful tool to build system integrations on top of XENON, that can react 
+programmatically to events.
+
+Webhook subscriptions are always scoped to an account. It is not supported to subscribe to events in multiple accounts
+at once. For that, you need to create a webhook subscription on the according event types in each account.
+
+In order to be allowed to manage webhook subscriptions, clients must have the policies `WebhooksRead` and
+`WebhooksWrite` in the account, they want to manage webhook subscriptions for.
+
+This guide walks through implementing a webhook receiver to react on events in a gridX account and registering it on
+the gridX webhook API.
+
+This sequence diagram outlines the process of building and integrating a webhook receiver with the gridX webhook API:
+```mermaid
+sequenceDiagram
+    Actor developer
+    alt development
+      developer->>gridX: create webhook subscription ("active": false)
+      gridX->>developer: HMAC secret
+      developer->>webhook receiver: deploy with HMAC secret
+      developer->>webhook receiver: expose on target URL
+      developer->>gridX: trigger ping webhook event
+      gridX->>webhook receiver: ping webhook event
+      webhook receiver->>webhook receiver: verify HMAC digest
+      webhook receiver->>webhook receiver: log ping event
+      webhook receiver->>gridX: 204 
+      developer->>gridX: update webhook subscription ("active": true)
+    end
+    alt runtime
+      gridX->>+webhook receiver: webhook event
+      webhook receiver->>webhook receiver: verify HMAC digest
+      webhook receiver->>webhook receiver: process event
+      webhook receiver->>gridX: 204
+    end
+```
+
+## Supported event types
+
+We support the following event types on a webhook subscription:
+- `appliance/create`: A new appliance has been created.
+- `appliance/delete`: An appliance has been deleted.
+- `appliance/offline`: An appliance's state switched offline. 
+- `appliance/online`: An appliance's state switched online.
+- `appliance/upate`: An appliance has been update.
+- `ev/charge-started`: Charging has started for an electric vehicle.
+- `ev/charge-stopped`: Charging has stopped for an electric vehicle.
+- `ev/control` (**deprecated**)
+- `ev/create`: A new electric vehicle has been created. (**deprecated**)
+- `ev/delete`: An electric vehicle has been deleted. (**deprecated**)
+- `ev/measurement`
+- `ev/plugged`: An electric vehicle has been plugged into a charging station. 
+- `ev/unplugged`: An electric vehicle has been plugged out of a charging station.
+- `ev/update`: An electric vehicle has been updated. (**deprecated**)
+- `gateway/create`: A new gateway has been created. 
+- `gateway/offline`: A gateway's state switched offline. 
+- `gateway/online`: A gateway's state switched online. 
+- `grid-signal-processor/limitation-of-power-consumption/set`: The grid signal processor has set a new limitation of 
+   power consumption.
+- `grid-signal-processor/limitation-of-power-consumption/unset`: The grid signal processor has unset a limitation of
+   power consumption.
+- `inverter/status`: The status of an inverter has changed.
+- `system/action`
+
+## Handling webhook event requests
+
+Events are sent via HTTP requests to webhook receivers.
+
+> [!IMPORTANT]
 > 
-> To get your user and account ID, you can call `https://api.gridx.de/user` with your API token. In the response, `id` is the user ID, `accountID` the account ID (d'uh). For details, please refer [to the API reference for `GET /user`](https://developer.gridx.ai/reference/get_user).
->
->```sh
->$ curl 'https://api.gridx.de/user' \
->    -H"authorization: Bearer $GRIDX_TOKEN" \
->    | jq '{"userID":.id, accountID}' ⮐
->...
->{
->  "userID": "...",
->  "accountID": "..."
->}
->```
->
-> Alternatively, you can search for your user in XENON and look up the Account ID under `Settings -> Account Settings`:
+> For receiving and processing webhook events successfully, make sure that your webhook receiver 
+> implementation fulfills these criteria:
+> - **The registered target URL starts with the `https` scheme and is secured by a trusted TLS certificate.**
+>   - Self-signed certificates are not supported.
+> - **The webhook receiver accepts `POST` requests on the registered target URL.**
+>   - We use request path and query parameters exactly as specified on the webhook subscription's target URL. We don't
+>     alter or append anything.
+>   - Keep in mind to URL-encode path segments and query parameters should you use any.
+> - **The webhook receiver responds to the request within a 5 seconds timeout.** 
+> - **The webhook receiver returns any of these status codes: `200 OK`, `201 Created`, `202 Accepted`, `204 No Content`.**
+
+### Request body
+
+> [!IMPORTANT]
 > 
-> ![Search User in XENON](./lookup-user-xenon.png)
+> The event itself will be sent in the HTTP request's body. 
+> 
+> For its schema, please refer to the [callback section on the `POST /accounts/{accountID}/webhooks` endpoint](
+> https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks).
 
-#### 4. Clean up rules created for testing
+The schema adheres to the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md), 
+which defines the message envelope. Its [`type` property](#supported-event-types) acts as a discriminator for
+deserializing the `data` property into a concrete event data type. 
+All possible event data schemas can be found in the [OpenAPI specification](openapi/webhook-events.yaml).
 
-After testing, please remember to remove the rule again to prevent continuous failures due to failed event deliveries.
+You might also find the [example webhook receiver OpenAPI specification](openapi/webhook-receiver-example.yaml) helpful.
 
-```sh
-curl -X DELETE \
-  https://api.gridx.de/accounts/<your account id>/users/<your user id>/notifications/rules/<rule id> \
-  --header 'authorization: Bearer <your API token>' \
-  --header 'accept: application/vnd.gridx.v2+json' \
-  --header 'content-type: application/json'
-```
+#### OpenAPI code generation
+ 
+If you don't want to implement the OpenAPI specification yourself, you can also leverage tools to generate the HTTP
+server's code from the OpenAPI specification (see [`openapi-generator` for 
+multi-language support](https://openapi-generator.tech/) or [`oapi-codegen` for Golang](
+https://github.com/deepmap/oapi-codegen)).
 
-### :closed_lock_with_key: Security
+While you might need to [tweak the templates](https://openapi-generator.tech/docs/templating) used for the code 
+generation and fine tune the results, it's a good way to get started in our experience.
 
-As your webhook receiver needs to be exposed to the public internet for it to work, you need to make sure to process only requests sent by gridX. This is done by verifying the `X-Signature` (or `X-Signature-Rs256`) headers in incoming requests were signed using the notification rule's secret.
-This secret is created when you set up the rule in the [third step above](#3-configure-webhook-rule). The secret will typically be kept in an environment variable (or some secret configuration storage) as not to hardcode it in the server implementation.
-
-Additional details and code samples can be found [here](https://hookdeck.com/webhooks/guides/how-to-implement-sha256-webhook-signature-verification#go-example) and [here](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries#validating-webhook-deliveries).
-
-An example for validating the `X-Signature` used by gridX can be found [here](./examples/go-secret-verification/README.md).
-
-### :bento: Samples
-
-* [NodeJS/Express](./examples/node-express/README.md): Hand-written webhook receiver that writes the IDs of appliances coming online to the console.
-* [Go](./examples/go-server/README.md): Server with stubs for all supported event types generated using `openapi-generator`.[^1]
-* [Python/aiohttp](./examples/python-aiohttp/README.md): Server with stubs for all supported event types generated using `openapi-generator`. For the sample, we print information about `appliance/online` events.[^2]
-* [Go Signature Verification](./examples/go-secret-verification/README.md): Example implementation of signature validation in go.
-* [Reactive Webapp](./examples/react-websockets/README.md): A webhook receiver that relays events to a React client app through websockets
-
-### :factory: Generating Server Stubs
-
-You might not want to hand-roll your own server implementation but get started more quickly by scaffolding a server
-containing handler stub implementations for all supported events and go from there.
-
-[`webhooks.yaml`](./webhooks.yaml) contains the [OpenAPI specification](https://spec.openapis.org/oas/v3.0.3) for webhook receivers.
-
-From this specification, you can generate code using e.g. [`OpenAPI Generator`](https://openapi-generator.tech/) (supports a plethora of languages/frameworks)
-or [`oapi-codegen`](https://github.com/deepmap/oapi-codegen) (go only)).
-While you might need to [tweak the templates](https://openapi-generator.tech/docs/templating) used for generation and fine tune the results, it's a good way to get started in our experience.
-
-To generate server stubs in a language of [your choice](https://openapi-generator.tech/docs/generators#server-generators) using `OpenAPI Generator`, use the following command.
+To generate server stubs in a language of [your choice](
+https://openapi-generator.tech/docs/generators#server-generators) using `OpenAPI Generator`, use the following command:
 
 ```sh
-  openapi-generator generate -g <server> -o examples/<servername> -i ./webhooks.yaml 
+openapi-generator generate -g <server> -o examples/<servername> -i your-webhook-receiver-spec.yaml
+# or only for generating schemas
+openapi-generator generate -g <server> -o examples/<servername> -i ./webhook-event-components.yaml 
 ```
 
-[^1]: We also ran `go mod tidy` and `goimports . -w` (find it [here](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)) on the generated code to make it match the standard code style and remove unused imports put in by the generator.
+#### Sending a `ping` event
 
-[^2]: To be able to install all required libraries, you need [`python3`](https://www.python.org/downloads/) at at least `v3.11` and [`rust`](https://rustup.rs/) installed. Use the latest nightly build of rust: `rustup default nightly`. For the generated code to run, we needed to remove the `x_signature` parameter from the controller methods (`sed -i '' 's/, x_signature,/,/g' openapi_server/controllers/webhook_receiver_controller.py`). Its value can still be accessed through `request.headers` as shown in the example. Even given the whole process is cumbersome, you still might want use the generated code as a starting point and/or tweak the code generation templates to improve that. But that's out of the scope for these samples.
+Note that the [`WebhookEvent` schema in the OpenAPI specification](openapi/webhook-events.yaml) lists `ping` as 
+possible event type value for events, even though this is not a valid event type to subscribe to on creating a webhook 
+subscription. 
+
+`ping` is a special event type that can only be used for testing the integration of your webhook receiver with the 
+gridX webhook subscription API. **`ping` events only serve testing purposes!**
+
+A request with an empty request body can be sent to the  [`POST /accounts/{accountID}/webhooks/{webhookID}/ping` 
+endpoint](https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSubscriptionID-/ping) 
+in order to trigger a `ping` event for a webhook subscription.
+
+### Expected response
+
+> [!IMPORTANT]
+>
+> This is an overview of how we will process the HTTP responses returned by webhook receivers:
+> 
+> **Success:**
+> The following response codes will be considered successful.  
+> - `200 OK`
+> - `201 Created`
+> - `202 Accepted`
+> - `204 No Content`
+> 
+> **Transient errors:**
+> The following responses will be considered to be transient errors. Requests will be retried up to five more times with
+> exponential backoff.
+> - `408 Request Timeout`
+> - `429 Too Many Requests`
+> - `500 Internal Server Error`
+> - `502 Bad Gateway`
+> - `503 Service Unavailable`
+> - `504 Gateway Timeout`
+>
+> **Gone:**
+> A `410 Gone` response code will lead to automated deletion of the webhook subscription.
+> 
+> **Permanent errors:** 
+> All other response codes will be considered to be permanent errors and won't be retried.
+
+If we receive a successful response, we will ignore the response's body. Otherwise, we will try to parse the 
+response body as arbitrary JSON object and log it.
+
+### Consecutive failures
+
+> [!IMPORTANT]
+>
+> **This feature won't be in place yet on 21 August 2025.**
+> 
+> We will only activate it, when the XENON dashboard supports subscribing to e-mail notifications for `webhook/failed` 
+> and `webhook/deactivated` events.
+>
+> The timeline for this will be announced on the [developer community](
+> https://community.developer.gridx.de/tag/webhooks).
+
+> [!NOTE]
+> 
+> **After 10 consecutive failures on forwarding webhook events to a webhook subscription's target URL, we will 
+> automatically set this webhook subscription to inactive.** 
+
+The counter of consecutive failures increases per webhook event (no matter which event type), not per retry attempt. It 
+will be reset to 0 on each received successful response.
+
+We recommend subscribing to email notifications on `webhook/failed` and `webhook/deactivated` events in your account on 
+the XENON dashboard (see [here](#enable-e-mail-notifications)).
+
+## Managing webhook subscriptions on the API
+
+When you finished implementing your webhook receiver, you can register a webhook subscription for it on the API by 
+calling the [create webhook subscription endpoint](
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks):
+
+We recommend creating the webhook subscription first deactivated to fetch the HMAC secret and test it first.
+```http request
+POST https://api.gridx.de/accounts/{{accountID}}/webhooks
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ bearerToken }}
+
+{
+  "eventTypes": [
+    "gateway/online",
+    "gateway/offline"
+  ],
+  "targetURL": "https://example.com/hooks/xenon",
+  "active": false
+}
+```
+
+Make sure to extract the following values from the response body:
+- `ìd`
+- `secret`
+
+Now you can test your webhook receiver as many times you like with the [`ping` endpoint](
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSubscriptionID-/ping):
+
+```http request
+POST https://api.gridx.de/accounts/{{accountID}}/webhooks/{{id}}/ping
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ bearerToken }}
+
+{}
+```
+
+Make sure to check the [requests' signatures](#verify-request-integrity) with the HMAC `secret`.
+
+Finally, if the tests have been successful, you can use the [update endpoint](
+https://community.developer.gridx.de/t/gridx-api-documentation/213#put-/accounts/-accountID-/webhooks/-webhookSubscriptionID-) 
+to activate your webhook subscription:
+
+```http request
+PUT https://api.gridx.de/accounts/{{accountID}}/webhooks/{{id}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Bearer {{ bearerToken }}
+
+{
+  "eventTypes": [
+    "gateway/online",
+    "gateway/offline"
+  ],
+  "targetURL": "https://example.com/hooks/xenon",
+  "active": true
+}
+```
+
+We recommend generating a new HMAC secret at least every six months by leveraging the [rotate webhook subscription
+secret endpoint](
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSubscriptionID-/secret) 
+
+## Best practices
+
+### Verify request integrity
+
+> [!IMPORTANT]
+> 
+> **We strongly advise you to verify each received HTTP request's integrity.** 
+
+For that, we rely on hash-based message authentication code ([HMAC](https://en.wikipedia.org/wiki/HMAC)) digests.
+
+When you [create a new webhook subscription](https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks) 
+in your account, we generate a random secret for it and return it to you in the creation request's response body.
+
+> [!IMPORTANT]
+> 
+> **Retrieving the secret again from our API is not possible!**
+> Make sure, you persist this secret securely, so that no one else can access it!
+
+For each webhook event we send to the webhook subscription's target URL, we will then calculate an HMAC-SHA-512 digest 
+of the request body with this secret. This digest will then be appended to the `X-Signature` header of each outgoing 
+request.
+
+The `X-Signature` header has the following format:
+```
+X-Signature: sha512=<digest 1>[, sha512=<digest 2>, ...]
+```
+
+Each digest is prefixed with `sha512=`. Multiple digests are separated by `, ` (comma and whitespace). For example:
+```
+X-Signature: sha512=a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890
+X-Signature: sha512=a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890a1b2c3d4e5f67890, sha512=b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0
+```
+
+In order to verify a request's integrity, we recommend implementing these steps on your receiver:
+1. Retrieve your securely stored copy of the secret.
+2. Calculate the HMAC-SHA-512 digest of the received request body with the secret and encode it to hexadecimal.
+3. For each signature provided in the `X-Signature` header:
+    - Remove the `sha512=` prefix to get only the digest.
+    - Compare your calculated digest with the received digest using a constant-time comparison
+      function.
+4.  If **any** of the provided signatures match your calculated digest, the webhook is considered
+    of integrity.
+5.  **Requests with an invalid or missing `X-Signature` header must be rejected.**
+    - `401 Unauthorized` with an empty response body should be returned.
+
+Have a look at our [Golang code example for verifying a request's integrity](examples/go-hmac-verification).
+
+#### Secret rotation
+
+The Webhook Subscription API provides an [endpoint to rotate a webhook subscription's HMAC secret](
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSusbcriptionID-/secret). 
+
+To not break running webhook receivers, rotating the HMAC secret will not remove the old secret immediately. 
+Instead, requests will be signed with both the old and the new secret for three days and both digests will be 
+appended to the requests' `X-Signature` header. 
+After these three days, the old secret will be finally dropped and requests will only be signed with the new secret.
+
+> [!WARNING]
+> 
+> We will only sign requests with the five most recent HMAC secrets for a webhook subscription to ensure that our 
+> requests don't exceed the header size limits of common web servers. 
+>
+> This means for you, that you shouldn't call the secret rotation five times after each other without actually 
+> replacing the HMAC secret key on your receiver with one of the returned secrets. 
+
+### Handling duplicate events
+
+Due to the nature of network connectivity the same event may be sent more than once. We recommend 
+making your event processing idempotent to handle duplicate events. 
+
+One way of doing this is to log events that you’ve processed and to skip processing for already-logged events.
+
+### Webhook event ordering
+
+The order, in which you might receive webhook events won't be guaranteed. For example, retrying event delivery on 
+temporary failures (e.g. due to network problems) can lead to the affected event being received after a newer event.
+
+### Enable e-mail notifications
+
+> [!IMPORTANT]
+>
+> **This feature won't be in place yet on the 21.08.2025.** 
+>
+> The timeline for this will be announced on the [developer community](
+> https://community.developer.gridx.de/tag/webhooks).
+
+We encourage you to enable e-mail notifications for the following events in your
+[account's notification settings](https://xenon.gridx.ai/settings/notification):
+- `webhook/failed`: Sends out an e-mail whenever a webhook subscription failed (see
+  [expected response](#expected-response)).
+- `webhook/inactive`: Sends out an e-mail whenever a webhook subscription in your account switches to being inactive,
+  e.g. due to [consecutive failures](#consecutive-failures).
+
+## Webhook receiver code examples
+
+- [Node.js/Express](examples/node-express): Hand-written webhook receiver that logs the IDs of appliances switching
+  online to the console.
+- [Go](examples/go-server): A server with [`openapi-generator`](https://openapi-generator.tech/)[^1] generated 
+  stubs for multiple event types.
+- [Python/aiohttp](examples/python-aiohttp): A server with [`openapi-generator`](https://openapi-generator.tech/) 
+  generated stubs for multiple event types. It prints out `appliance/online` events.
+- [Reactive webapp](examples/react-websockets): A webhook receiver that relays events to a React client app through 
+  websockets.
