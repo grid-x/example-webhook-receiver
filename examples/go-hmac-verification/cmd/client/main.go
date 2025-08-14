@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -13,12 +13,12 @@ import (
 )
 
 type PingEvent struct {
-	ID              string        `json:"id"`
+	ID              uuid.UUID     `json:"id"`
 	Time            time.Time     `json:"time"`
 	DataContentType string        `json:"dataContentType,omitempty"`
 	SpecVersion     string        `json:"specVersion"`
 	Source          string        `json:"source"`
-	CorrelationID   string        `json:"correlationID,omitempty"`
+	CorrelationID   uuid.UUID     `json:"correlationID,omitempty"`
 	Type            string        `json:"type"`
 	Data            PingEventData `json:"data,omitempty"`
 }
@@ -30,16 +30,17 @@ type PingEventData struct {
 func main() {
 	secretKey := os.Getenv("HMAC_SECRET_KEY")
 	if secretKey == "" {
-		log.Fatalf("environment variable HMAC_SECRET_KEY must be set")
+		slog.Error("environment variable HMAC_SECRET_KEY must be set")
+		os.Exit(1)
 	}
 
 	event := PingEvent{
-		ID:              uuid.New().String(),
+		ID:              uuid.New(),
 		Time:            time.Now(),
 		DataContentType: "application/json",
-		SpecVersion:     "1.0.0",
+		SpecVersion:     "1.0.1",
 		Source:          "/systems/" + uuid.New().String(),
-		CorrelationID:   uuid.New().String(),
+		CorrelationID:   uuid.New(),
 		Type:            "ping",
 		Data: PingEventData{
 			Message: "hello world",
@@ -48,24 +49,28 @@ func main() {
 
 	bodyBytes, err := json.Marshal(event)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed marshalling body to JSON", "error", err)
+		os.Exit(1)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, "http://localhost:8080/hooks/xenon", bytes.NewBuffer(bodyBytes))
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed creating request", "error", err)
+		os.Exit(1)
 	}
 
 	requestSigner := hmac.NewRequestSigner([]string{secretKey})
 	if err := requestSigner.Sign(req); err != nil {
-		log.Fatal(err)
+		slog.Error("failed signing request", "error", err)
+		os.Exit(1)
 	}
 
 	client := &http.Client{}
 	res, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed sending request", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println(res.StatusCode)
+	slog.Info("received response", "status", res.StatusCode)
 }

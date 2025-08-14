@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,7 +12,8 @@ import (
 func main() {
 	secretKey := os.Getenv("HMAC_SECRET_KEY")
 	if secretKey == "" {
-		log.Fatalf("environment variable HMAC_SECRET_KEY must be set")
+		slog.Error("environment variable HMAC_SECRET_KEY must be set")
+		os.Exit(1)
 	}
 
 	requestVerifier := hmac.NewRequestVerifier(secretKey)
@@ -29,11 +29,11 @@ func main() {
 func handler(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		slog.Error("failed to read body", "error", err)
+		slog.ErrorContext(r.Context(), "failed to read body", "error", err)
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 	}
 
-	slog.Info("Received request", "body", body)
+	slog.InfoContext(r.Context(), "Received request", "body", body)
 
 	w.WriteHeader(http.StatusNoContent)
 }

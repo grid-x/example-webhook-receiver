@@ -16,7 +16,7 @@ import (
 const (
 	SignatureHeader = "X-Signature"
 	DigestPrefix    = "sha512="
-	DigestSeparator = ", "
+	DigestSeparator = ","
 )
 
 func CalculateDigest(bytes []byte, secretKey string) []byte {
@@ -38,7 +38,7 @@ func NewRequestVerifier(secretKey string) *RequestVerifier {
 func (v *RequestVerifier) Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := v.Verify(r); err != nil {
-			slog.Warn("failed verifying HMAC signature", "error", err)
+			slog.WarnContext(r.Context(), "failed verifying HMAC signature", "error", err)
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -92,6 +92,8 @@ func parseSignatureHeader(signatureHeader string) ([][]byte, error) {
 
 	digests := make([][]byte, 0, len(digestsWithPrefixes))
 	for _, digestWithPrefix := range digestsWithPrefixes {
+		digestWithPrefix = strings.TrimSpace(digestWithPrefix)
+
 		if !strings.HasPrefix(digestWithPrefix, DigestPrefix) {
 			return digests, errors.New("found digest without prefix")
 		}
@@ -132,7 +134,7 @@ func (s *RequestSigner) Sign(r *http.Request) error {
 		digests[i] = DigestPrefix + hex.EncodeToString(digestBytes)
 	}
 
-	r.Header.Set(SignatureHeader, strings.Join(digests, DigestSeparator))
+	r.Header.Set(SignatureHeader, strings.Join(digests, DigestSeparator+" "))
 
 	return nil
 }
