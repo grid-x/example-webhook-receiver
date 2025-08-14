@@ -21,9 +21,8 @@ The webhook subscription API lets XENON users manage webhook subscriptions for a
 > For that, we will merge webhook settings with the same `accountID`, `targetURL` and `secret` into a single webhook 
 > subscription, as we now support subscribing to multiple event types at once.
 > 
-> Because webhook subscriptions are now account-scoped, you will find webhook subscriptions migrated from any user's 
-> notification rules in your account on the [`GET /accounts/{accountID}/webhooks` endpoint](
-> https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks) from then on.
+> As webhook subscriptions will be account-scoped after the migration window, you will find the migrated webhook subscriptions by calling the [`GET /accounts/{accountID}/webhooks` endpoint](
+> https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks). 
 > 
 > **All changes affect only management of webhook subscriptions. No changes will affect or break the actual webhook
 > receiver implementation.**
