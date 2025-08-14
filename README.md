@@ -14,7 +14,7 @@ The webhook subscription API lets XENON users manage webhook subscriptions for a
 > https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks) should be 
 > used to manage webhook subscriptions from then on.**  
 > 
-> We will automatically migrate all existing webhook settings on notification rules to webhook subscriptions on this 
+> We will automatically migrate all existing webhook settings on notification rules to webhook subscriptions during this 
 > [maintenance window (21.08.2025 18:00-21:00)](
 > https://support.gridx.de/hc/de/articles/28369740677266--Wartungsfenster-am-Donnerstag-21-August-von-18-00-bis-21-00-Uhr-MEZ).
 >
