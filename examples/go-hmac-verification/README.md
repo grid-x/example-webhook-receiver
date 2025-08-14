@@ -1,4 +1,4 @@
-# go-hmac-verification
+# HMAC Verification in Go
 
 This example includes a simple HTTP server that listens on `:8080/hooks/xenon`. It verifies the HMAC digests parsed from
 the HTTP request header `X-Signature` against the secret key provided on the environment variable `HMAC_SECRET_KEY`.
