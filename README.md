@@ -428,7 +428,7 @@ In order to verify a request's integrity, we recommend implementing these steps 
 4.  If **any** of the provided signatures match your calculated digest, the webhook is considered
     of integrity.
 5.  **Requests with an invalid or missing `X-Signature` header must be rejected.**
-    - `401 Unauthorized` with an empty response body should be returned. 
+    - `401 Unauthorized` with an empty response body should be returned.
 
 Have a look at our [Golang code example for verifying a request's integrity](examples/go-hmac-verification).
 
@@ -441,6 +441,14 @@ To not break running webhook receivers, rotating the HMAC secret will not remove
 Instead, requests will be signed with both the old and the new secret for three days and both digests will be 
 appended to the requests' `X-Signature` header. 
 After these three days, the old secret will be finally dropped and requests will only be signed with the new secret.
+
+> [!WARNING]
+> 
+> We will only sign requests with the five most recent HMAC secrets for a webhook subscription to ensure that our 
+> requests don't exceed the header size limits of common web servers. 
+>
+> This means for you, that you shouldn't call the secret rotation five times after each other without actually 
+> replacing the HMAC secret key on your receiver with one of the returned secrets. 
 
 ### Handling duplicate events
 
