@@ -262,7 +262,7 @@ subscription.
 gridX webhook subscription API. **`ping` events only serve testing purposes!**
 
 A request with an empty request body can be sent to the  [`POST /accounts/{accountID}/webhooks/{webhookID}/ping` 
-endpoint](https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSubscriptionID-/ping) 
+endpoint](https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookID-/ping) 
 in order to trigger a `ping` event for a webhook subscription.
 
 ### Expected response
@@ -348,7 +348,7 @@ Make sure to extract the following values from the response body:
 - `secret`
 
 Now you can test your webhook receiver as many times you like with the [`ping` endpoint](
-https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSubscriptionID-/ping):
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookID-/ping):
 
 ```http request
 POST https://api.gridx.de/accounts/{{accountID}}/webhooks/{{id}}/ping
@@ -362,7 +362,7 @@ Authorization: Bearer {{ bearerToken }}
 Make sure to check the [requests' signatures](#verify-request-integrity) with the HMAC `secret`.
 
 Finally, if the tests have been successful, you can use the [update endpoint](
-https://community.developer.gridx.de/t/gridx-api-documentation/213#put-/accounts/-accountID-/webhooks/-webhookSubscriptionID-) 
+https://community.developer.gridx.de/t/gridx-api-documentation/213#put-/accounts/-accountID-/webhooks/-webhookID-) 
 to activate your webhook subscription:
 
 ```http request
@@ -383,7 +383,7 @@ Authorization: Bearer {{ bearerToken }}
 
 We recommend generating a new HMAC secret at least every six months by leveraging the [rotate webhook subscription
 secret endpoint](
-https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSubscriptionID-/secret) 
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookID-/secret) 
 
 ## Best practices
 
@@ -435,7 +435,7 @@ Have a look at our [Golang code example for verifying a request's integrity](exa
 #### Secret rotation
 
 The Webhook Subscription API provides an [endpoint to rotate a webhook subscription's HMAC secret](
-https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookSusbcriptionID-/secret). 
+https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/webhooks/-webhookID-/secret). 
 
 To not break running webhook receivers, rotating the HMAC secret will not remove the old secret immediately. 
 Instead, requests will be signed with both the old and the new secret for three days and both digests will be 
