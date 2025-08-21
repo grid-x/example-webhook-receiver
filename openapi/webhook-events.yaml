@@ -95,10 +95,6 @@ components:
             triggered the event.
           example: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
           type: string
-        userID:
-          type: string
-          format: uuid
-          description: UserID is the ID of the user that triggered the event.
         correlationID:
           description: Correlation ID to identify the request triggering the event.
           format: uuid
