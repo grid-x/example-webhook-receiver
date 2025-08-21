@@ -8,20 +8,21 @@ The webhook subscription API lets XENON users manage webhook subscriptions for a
 > 
 > **Managing webhook subscriptions through the [Notification Rule API](
 > https://community.developer.gridx.de/t/gridx-api-documentation/213#post-/accounts/-accountID-/users/-userID-/notifications/rules)
-> won't be supported anymore as of 21.08.2025.**
+> will be deprecated.**
 > 
 > **The new [Webhook Subscription API](
 > https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks) should be 
 > used to manage webhook subscriptions from then on.**  
 > 
 > We will automatically migrate all existing webhook settings on notification rules to webhook subscriptions during this 
-> [maintenance window (21.08.2025 18:00-21:00)](
-> https://support.gridx.de/hc/de/articles/28369740677266--Wartungsfenster-am-Donnerstag-21-August-von-18-00-bis-21-00-Uhr-MEZ).
+> a maintenance window soon to be announced on the [developer community](
+> https://community.developer.gridx.de/tag/webhooks).
 >
 > For that, we will merge webhook settings with the same `accountID`, `targetURL` and `secret` into a single webhook 
 > subscription, as we now support subscribing to multiple event types at once.
 > 
-> As webhook subscriptions will be account-scoped after the migration window, you will find the migrated webhook subscriptions by calling the [`GET /accounts/{accountID}/webhooks` endpoint](
+> As webhook subscriptions will be account-scoped after the migration window, you will find the migrated webhook 
+> subscriptions by calling the [`GET /accounts/{accountID}/webhooks` endpoint](
 > https://community.developer.gridx.de/t/gridx-api-documentation/213#get-/accounts/-accountID-/webhooks). 
 > 
 > **All changes affect only management of webhook subscriptions. No changes will affect or break the actual webhook
@@ -30,7 +31,7 @@ The webhook subscription API lets XENON users manage webhook subscriptions for a
 The following table provide an overview of the changes migrating from the deprecated Notification Rule API to the new
 Webhook Subscription API.
 
-From 21.08.2025 on:
+Changes introduced by the Webhook Subscription API:
 
 | Notification Rule API (deprecated)                                     | Webhook Subscription API                                                    |
 |------------------------------------------------------------------------|-----------------------------------------------------------------------------|
@@ -466,7 +467,7 @@ temporary failures (e.g. due to network problems) can lead to the affected event
 
 > [!IMPORTANT]
 >
-> **This feature won't be in place yet on the 21.08.2025.** 
+> **This feature is not in place yet.** 
 >
 > The timeline for this will be announced on the [developer community](
 > https://community.developer.gridx.de/tag/webhooks).
