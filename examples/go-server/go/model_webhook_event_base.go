@@ -18,7 +18,8 @@ import (
 
 
 
-type EvPluggedEvent struct {
+// WebhookEventBase - Representation of an event in a gridX account. Follows the [CloudEvents v1.0.1 specification]( https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).
+type WebhookEventBase struct {
 
 	// The unique ID of the event instance.
 	Id string `json:"id"`
@@ -38,13 +39,15 @@ type EvPluggedEvent struct {
 	// Correlation ID to identify the request triggering the event.
 	CorrelationID string `json:"correlationID,omitempty"`
 
+	// The type of the event.
 	Type string `json:"type"`
 
-	Data EvPluggedEventData `json:"data"`
+	// Contains the actual event payload. Deserialize depending on the `type` property.
+	Data map[string]interface{} `json:"data"`
 }
 
-// AssertEvPluggedEventRequired checks if the required fields are not zero-ed
-func AssertEvPluggedEventRequired(obj EvPluggedEvent) error {
+// AssertWebhookEventBaseRequired checks if the required fields are not zero-ed
+func AssertWebhookEventBaseRequired(obj WebhookEventBase) error {
 	elements := map[string]interface{}{
 		"id": obj.Id,
 		"time": obj.Time,
@@ -59,16 +62,10 @@ func AssertEvPluggedEventRequired(obj EvPluggedEvent) error {
 		}
 	}
 
-	if err := AssertEvPluggedEventDataRequired(obj.Data); err != nil {
-		return err
-	}
 	return nil
 }
 
-// AssertEvPluggedEventConstraints checks if the values respects the defined constraints
-func AssertEvPluggedEventConstraints(obj EvPluggedEvent) error {
-	if err := AssertEvPluggedEventDataConstraints(obj.Data); err != nil {
-		return err
-	}
+// AssertWebhookEventBaseConstraints checks if the values respects the defined constraints
+func AssertWebhookEventBaseConstraints(obj WebhookEventBase) error {
 	return nil
 }

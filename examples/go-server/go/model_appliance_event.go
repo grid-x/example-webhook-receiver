@@ -18,7 +18,7 @@ import (
 
 
 
-type EvPluggedEvent struct {
+type ApplianceEvent struct {
 
 	// The unique ID of the event instance.
 	Id string `json:"id"`
@@ -40,11 +40,11 @@ type EvPluggedEvent struct {
 
 	Type string `json:"type"`
 
-	Data EvPluggedEventData `json:"data"`
+	Data ApplianceEventData `json:"data"`
 }
 
-// AssertEvPluggedEventRequired checks if the required fields are not zero-ed
-func AssertEvPluggedEventRequired(obj EvPluggedEvent) error {
+// AssertApplianceEventRequired checks if the required fields are not zero-ed
+func AssertApplianceEventRequired(obj ApplianceEvent) error {
 	elements := map[string]interface{}{
 		"id": obj.Id,
 		"time": obj.Time,
@@ -59,15 +59,15 @@ func AssertEvPluggedEventRequired(obj EvPluggedEvent) error {
 		}
 	}
 
-	if err := AssertEvPluggedEventDataRequired(obj.Data); err != nil {
+	if err := AssertApplianceEventDataRequired(obj.Data); err != nil {
 		return err
 	}
 	return nil
 }
 
-// AssertEvPluggedEventConstraints checks if the values respects the defined constraints
-func AssertEvPluggedEventConstraints(obj EvPluggedEvent) error {
-	if err := AssertEvPluggedEventDataConstraints(obj.Data); err != nil {
+// AssertApplianceEventConstraints checks if the values respects the defined constraints
+func AssertApplianceEventConstraints(obj ApplianceEvent) error {
+	if err := AssertApplianceEventDataConstraints(obj.Data); err != nil {
 		return err
 	}
 	return nil
