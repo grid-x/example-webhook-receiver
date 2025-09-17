@@ -21,5 +21,14 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
-go/api_webhook_receiver_service.go
-main.go
+
+/go/api.go
+/go/api_default_service.go
+/go/api_default.go
+/go/model_webhook_event_request.go
+/go/routers.go
+/pkg
+/main.go
+/go.mod
+/go.sum
+/README.md

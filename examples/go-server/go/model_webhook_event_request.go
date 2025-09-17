@@ -11,14 +11,12 @@
 
 package openapi
 
-
 import (
+	"encoding/json"
 	"time"
 )
 
-
-
-type EvPluggedEvent struct {
+type WebhookEventRequest struct {
 
 	// The unique ID of the event instance.
 	Id string `json:"id"`
@@ -40,11 +38,11 @@ type EvPluggedEvent struct {
 
 	Type string `json:"type"`
 
-	Data EvPluggedEventData `json:"data"`
+	Data json.RawMessage `json:"data"`
 }
 
-// AssertEvPluggedEventRequired checks if the required fields are not zero-ed
-func AssertEvPluggedEventRequired(obj EvPluggedEvent) error {
+// AssertWebhookEventRequestRequired checks if the required fields are not zero-ed
+func AssertWebhookEventRequestRequired(obj WebhookEventRequest) error {
 	elements := map[string]interface{}{
 		"id": obj.Id,
 		"time": obj.Time,
@@ -58,17 +56,10 @@ func AssertEvPluggedEventRequired(obj EvPluggedEvent) error {
 			return &RequiredError{Field: name}
 		}
 	}
-
-	if err := AssertEvPluggedEventDataRequired(obj.Data); err != nil {
-		return err
-	}
 	return nil
 }
 
-// AssertEvPluggedEventConstraints checks if the values respects the defined constraints
-func AssertEvPluggedEventConstraints(obj EvPluggedEvent) error {
-	if err := AssertEvPluggedEventDataConstraints(obj.Data); err != nil {
-		return err
-	}
+// AssertWebhookEventRequestConstraints checks if the values respects the defined constraints
+func AssertWebhookEventRequestConstraints(obj WebhookEventRequest) error {
 	return nil
 }

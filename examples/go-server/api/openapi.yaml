@@ -1,403 +1,203 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  description: |
-    This API describes the event webhook calling convention.
-    In order to receive webhook events from the gridX API, third parties must implement endpoints according to this specification. In the following, the external partner API is referred to as  "external API", while the gridX API is called "gridX".
-  title: gridX Webhook Event Receiver API
-  version: 1.0.0
-  x-audience: company-internal
-  x-api-id: 7b2283ae-4623-42c2-af84-ef6ce4d72993
+  contact:
+    email: developer-community@gridx.de
+    name: gridX
+    url: https://www.gridx.ai/module/api
+  description: This is an example webhook receiver for XENON.
+  license:
+    name: All rights reserved.
+    url: https://www.gridx.ai/
+  title: Example XENON webhook receiver
+  version: v1.0.0
 servers:
-- url: https://your-webhook-receiver-url-goes-here/gridx
-- url: http://localhost:8080/gridx
+- description: production
+  url: https://your.domain
+- description: staging
+  url: https://your.staging.domain
 paths:
-  /events/appliance/create:
+  /hooks/xenon:
+    description: The path is just an example. Pick whatever path suits you best.
     post:
-      description: Called by the gridX API when an appliance is created.
+      description: Processes a XENON webhook event.
+      operationId: processXenonWebhookEvent
       parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
+      - description: HMAC-SHA-512 digest(s) for request integrity verification.
         in: header
         name: X-Signature
         required: true
         schema:
+          description: "Can contain one or more digests, separated by a comma and\
+            \ a space (`, `). Each signature is prefixed with \n`sha512=`."
+          example: sha512=8e974e6f477383a8b27785a9c24098c1f96420377a06a6c0b396e67e37604d55b0a32d163f8202518e388d1d86d649d214c770d1820641042456578051613045
+          pattern: "^sha512=[0-9a-fA-F]{128}(?:,\\s?sha512=[0-9a-fA-F]{128})*$"
           type: string
-        style: simple
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApplianceCreateEvent'
-        description: "The event's payload, partly depending on the event's type (see\
-          \ parameter eventType)."
-        required: true
+        $ref: "#/components/requestBodies/WebhookEvent"
       responses:
         "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
+          description: The webhook event has been processed successfully.
+        "201":
+          description: The webhook event has been processed successfully.
+        "202":
+          description: The webhook event has been processed successfully.
+        "204":
+          description: The webhook event has been processed successfully.
+        "401":
+          description: HMAC digest verification failed for the request.
+        "410":
+          description: The webhook receiver has been decommissioned and its webhook
+            subscription should be deleted.
+        "408":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a transient error and will be retried
+            five times with exponential backoff.
+        "429":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a transient error and will be retried
+            five times with exponential backoff.
         "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a transient error and will be retried
+            five times with exponential backoff.
+        "502":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a transient error and will be retried
+            five times with exponential backoff.
         "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/appliance/offline:
-    post:
-      description: Called by the gridX API when when an appliance goes offline.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApplianceOfflineEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/appliance/online:
-    post:
-      description: Called by the gridX API when an appliance comes online.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ApplianceOnlineEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/inverter/status:
-    post:
-      description: Called by the gridX API when an inverter's status changes.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InverterStatusEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/gateway/create:
-    post:
-      description: Called by the gridX API when a gateway is created.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GatewayCreateEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/gateway/offline:
-    post:
-      description: Called by the gridX API when a gateway goes offline.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GatewayOfflineEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/gateway/online:
-    post:
-      description: Called by the gridX API when a gateway comes online.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GatewayOnlineEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/ev/plugged:
-    post:
-      description: Called by the gridX API when an EV charging state changes.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EVPluggedEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
-  /events/comissioning/done:
-    post:
-      description: Called by the gridX API when commissioning a gateway was finished.
-      parameters:
-      - description: |
-          The value of this header can be used to authenticate the event payload and is in the format `<method>=<signature>`.
-          - `method` must be "sha512" in any case.
-          - `signature` is computed using the HMAC algorithm (as described in [RFC2104](https://datatracker.ietf.org/doc/html/rfc2104)) with SHA512 as hash function, with the request body as data and a pre-defined secret as key (that is only known between the external API and gridX).
-          This is the same method as described in the W3C WebSub standard X-Hub-Signature, see: https://www.w3.org/TR/websub/#authenticated-content-distribution
-        example: sha512=<signature>
-        explode: false
-        in: header
-        name: X-Signature
-        required: true
-        schema:
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ComissioningDoneEvent'
-        required: true
-      responses:
-        "200":
-          description: |
-            Successfully received event (no issue with payload or validation).
-        "403":
-          description: |
-            Indicate that signature validation was not successful.
-        "404":
-          description: |
-            Not Found - indicate that the external API is not available.
-        "500":
-          description: |
-            Indicate that there is a temporary fault on the external API. gridX will do its best to retry delivery in this case.
-        "503":
-          description: |
-            Indicate that the service is temporarily unavailable. gridX will do its best to retry delivery in this case.
-      summary: Webhook Receiver
-      tags:
-      - Webhook Receiver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a transient error and will be retried
+            five times with exponential backoff.
+        "504":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a transient error and will be retried
+            five times with exponential backoff.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArbitraryErrorResponse"
+          description: The request failed with a permanent error and won't be retried.
 components:
+  parameters:
+    XSignature:
+      description: HMAC-SHA-512 digest(s) for request integrity verification.
+      in: header
+      name: X-Signature
+      required: true
+      schema:
+        description: "Can contain one or more digests, separated by a comma and a\
+          \ space (`, `). Each signature is prefixed with \n`sha512=`."
+        example: sha512=8e974e6f477383a8b27785a9c24098c1f96420377a06a6c0b396e67e37604d55b0a32d163f8202518e388d1d86d649d214c770d1820641042456578051613045
+        pattern: "^sha512=[0-9a-fA-F]{128}(?:,\\s?sha512=[0-9a-fA-F]{128})*$"
+        type: string
+  requestBodies:
+    WebhookEvent:
+      content:
+        application.json:
+          schema:
+            $ref: "#/components/schemas/WebhookEventRequest"
+      description: Forwards an event to a webhook subscription's target URL.
+      required: true
+  responses:
+    WebhookEventSuccess:
+      description: The webhook event has been processed successfully.
+    WebhookEventUnauthenticated:
+      description: HMAC digest verification failed for the request.
+    WebhookEventReceiverGone:
+      description: The webhook receiver has been decommissioned and its webhook subscription
+        should be deleted.
+    WebhookEventTransientError:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ArbitraryErrorResponse"
+      description: The request failed with a transient error and will be retried five
+        times with exponential backoff.
+    WebhookEventPermanentError:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ArbitraryErrorResponse"
+      description: The request failed with a permanent error and won't be retried.
   schemas:
-    BasicEvent:
-      description: |
-        Event which follows the [CloudEvents v1.0.1 specification](https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).  An event consists of metadata (such as occurrence time and ID) and the actual `data` payload that depends on the event's `type`. The extension attribute `notification` can be used by consumers to produce a notification.
+    WebhookEventRequest:
+      discriminator:
+        mapping:
+          appliance/create: "#/components/schemas/ApplianceEvent"
+          appliance/delete: "#/components/schemas/ApplianceEvent"
+          appliance/offline: "#/components/schemas/ApplianceEvent"
+          appliance/online: "#/components/schemas/ApplianceEvent"
+          appliance/update: "#/components/schemas/ApplianceEvent"
+          ev/charge-started: "#/components/schemas/EVChargeSessionEvent"
+          ev/charge-stopped: "#/components/schemas/EVChargeSessionEvent"
+          ev/control: "#/components/schemas/EVControlEvent"
+          ev/create: "#/components/schemas/EVEnodeEvent"
+          ev/delete: "#/components/schemas/EVEnodeEvent"
+          ev/measurement: "#/components/schemas/EVMeasurementEvent"
+          ev/plugged: "#/components/schemas/EVPluggedEvent"
+          ev/unplugged: "#/components/schemas/EVPluggedEvent"
+          ev/update: "#/components/schemas/EVEnodeEvent"
+          gateway/create: "#/components/schemas/GatewayEvent"
+          gateway/offline: "#/components/schemas/GatewayEvent"
+          gateway/online: "#/components/schemas/GatewayEvent"
+          grid-signal-processor/limitation-of-power-consumption/set: "#/components/schemas/GSP14aSignalEvent"
+          grid-signal-processor/limitation-of-power-consumption/unset: "#/components/schemas/GSP14aSignalEvent"
+          inverter/status: "#/components/schemas/InverterEvent"
+          ping: "#/components/schemas/PingEvent"
+          system/action: "#/components/schemas/SystemActionEvent"
+        propertyName: type
+      oneOf:
+      - $ref: "#/components/schemas/ApplianceEvent"
+      - $ref: "#/components/schemas/EVEnodeEvent"
+      - $ref: "#/components/schemas/EVControlEvent"
+      - $ref: "#/components/schemas/EVMeasurementEvent"
+      - $ref: "#/components/schemas/EVPluggedEvent"
+      - $ref: "#/components/schemas/EVChargeSessionEvent"
+      - $ref: "#/components/schemas/GatewayEvent"
+      - $ref: "#/components/schemas/GSP14aSignalEvent"
+      - $ref: "#/components/schemas/InverterEvent"
+      - $ref: "#/components/schemas/PingEvent"
+      - $ref: "#/components/schemas/SystemActionEvent"
+    ApplianceEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - appliance/create
+            - appliance/delete
+            - appliance/offline
+            - appliance/online
+            - appliance/update
+            type: string
+          data:
+            $ref: "#/components/schemas/ApplianceEventData"
+    WebhookEventBase:
+      description: |-
+        Representation of an event in a gridX account. Follows the [CloudEvents v1.0.1 specification](
+        https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).
       properties:
         id:
+          description: The unique ID of the event instance.
           format: uuid
           type: string
         time:
@@ -406,369 +206,47 @@ components:
           type: string
         dataContentType:
           default: application/json
-          description: "Content-Type indicating how to parse the `data` attribute.\
-            \ Only 'application/json' is supported for now. If omitted, it is guaranteed\
-            \ to be `application/json`."
+          description: |-
+            Content-Type indicating how to parse the `data` attribute.
+            Only 'application/json' is supported for now. If omitted, it is guaranteed to be `application/json`.
           enum:
           - application/json
           example: application/json
           type: string
         specVersion:
-          description: "The CloudEvents specification that is followed, currently\
-            \ \"1.0\". Only consists of major and minor version parts, to allow patching\
-            \ in a backward-compatible fashion."
+          description: |-
+            The adhered CloudEvents specification version, currently "1.0".
+            Only consists of major and minor version parts, to allow patching in a backward-compatible fashion.
           example: "1.0"
           type: string
         source:
-          description: "Source of the event, which is usually a resource identifier\
-            \ path that can be used to identify the object which triggered the event."
+          description: |-
+            The source of the event is usually a resource identifier path that can be used to identify the object which
+            triggered the event.
           example: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
           type: string
         correlationID:
-          description: ID to identify the request triggering the event.
+          description: Correlation ID to identify the request triggering the event.
           format: uuid
           type: string
+        type:
+          description: The type of the event.
+          type: string
+        data:
+          description: Contains the actual event payload. Deserialize depending on
+            the `type` property.
+          type: object
       required:
+      - accountID
+      - data
       - id
       - source
       - specVersion
       - time
-      title: Event
-    ApplianceCreateEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - appliance/create
-            type: string
-          data:
-            $ref: '#/components/schemas/ApplianceEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
-          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
-          serialNumber: "9312355"
-          systemName: ExampleSystem
-          kind: BATTERY
-          name: ExampleMeter
-          model: Baz
-          type: METER
-          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
-          manufacturer: Iskraemeco
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: appliance/create
-      title: Event appliance/create
-    ApplianceOfflineEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - appliance/offline
-            type: string
-          data:
-            $ref: '#/components/schemas/ApplianceEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
-          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
-          serialNumber: "9312355"
-          systemName: ExampleSystem
-          kind: BATTERY
-          name: ExampleMeter
-          model: Baz
-          type: METER
-          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
-          manufacturer: Iskraemeco
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: appliance/offline
-      title: Event appliance/offline
-    ApplianceOnlineEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - appliance/online
-            type: string
-          data:
-            $ref: '#/components/schemas/ApplianceEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
-          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
-          serialNumber: "9312355"
-          systemName: ExampleSystem
-          kind: BATTERY
-          name: ExampleMeter
-          model: Baz
-          type: METER
-          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
-          manufacturer: Iskraemeco
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: appliance/online
-      title: Event appliance/online
-    InverterStatusEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - inverter/status
-            type: string
-          data:
-            $ref: '#/components/schemas/InverterEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
-          systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
-          serialNumber: "9312355"
-          kind: BATTERY
-          type: METER
-          lastErrCode: F71A
-          manufacturer: Iskraemeco
-          systemName: ExampleSystem
-          errCode: errCode
-          name: ExampleMeter
-          model: Baz
-          gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
-          lastStatus: ERROR
-          status: OK
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: inverter/status
-      title: Event inverter/status
-    GatewayCreateEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - gateway/create
-            type: string
-          data:
-            $ref: '#/components/schemas/GatewayEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          gatewaySerialnumber: D403-007-000-000-001-B-X
-          systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
-          systemName: ExampleSystem
-          gatewayName: My gridBox
-          userMail: max.mustermann@muster.de
-          userName: Max Mustermann
-          userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
-          gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: gateway/create
-      title: Event gateway/create
-    GatewayOfflineEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - gateway/offline
-            type: string
-          data:
-            $ref: '#/components/schemas/GatewayEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          gatewaySerialnumber: D403-007-000-000-001-B-X
-          systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
-          systemName: ExampleSystem
-          gatewayName: My gridBox
-          userMail: max.mustermann@muster.de
-          userName: Max Mustermann
-          userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
-          gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: gateway/offline
-      title: Event gateway/offline
-    GatewayOnlineEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - gateway/online
-            type: string
-          data:
-            $ref: '#/components/schemas/GatewayEventData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          gatewaySerialnumber: D403-007-000-000-001-B-X
-          systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
-          systemName: ExampleSystem
-          gatewayName: My gridBox
-          userMail: max.mustermann@muster.de
-          userName: Max Mustermann
-          userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
-          gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: gateway/online
-      title: Event gateway/online
-    EVPluggedEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - ev/plugged
-            type: string
-          data:
-            $ref: '#/components/schemas/EVEventData'
-        required:
-        - type
-        type: object
-      title: Event ev/plugged
-    ComissioningDoneEvent:
-      allOf:
-      - $ref: '#/components/schemas/BasicEvent'
-      - properties:
-          type:
-            enum:
-            - commissioning/done
-            type: string
-          data:
-            $ref: '#/components/schemas/CommissioningData'
-        required:
-        - type
-        type: object
-      example:
-        specVersion: "1.0"
-        data:
-          customerAddress: "Straße Str. 1, 20359, Hamburg, Germany"
-          gatewaySerialnumber: D403-007-000-000-001-B-X
-          systemName: Test system
-          customerEmail: test@email.com
-          customerID: 1a81c4f4-5f6c-48e6-be91-2528c1c0bb28
-        correlationID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        time: 2000-01-23T04:56:07.000+00:00
-        source: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
-        dataContentType: application/json
-        type: commissioning/done
-      title: Event commissioning/done
-    GatewayEventData:
-      description: Payload for `gateway/*` events.
-      example:
-        gatewaySerialnumber: D403-007-000-000-001-B-X
-        systemID: af87d7b3-316f-4d26-868c-4ae351095bdc
-        systemName: ExampleSystem
-        gatewayName: My gridBox
-        userMail: max.mustermann@muster.de
-        userName: Max Mustermann
-        userID: a115d9e3-6e78-4ddf-8676-a98c28ad8249
-        gatewayID: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
-      properties:
-        gatewayID:
-          description: The ID of the gateway this event is triggered for.
-          example: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
-          format: uuid
-          type: string
-        gatewayName:
-          description: The name of the gateway corresponding to the gatewayID.
-          example: My gridBox
-          type: string
-        gatewaySerialnumber:
-          description: The serialnumber of the gateway corresponding to the gatewayID.
-          example: D403-007-000-000-001-B-X
-          type: string
-        systemID:
-          description: The ID of the system this event is triggered for.
-          example: af87d7b3-316f-4d26-868c-4ae351095bdc
-          format: uuid
-          type: string
-        systemName:
-          description: The name of the system corresponding to the systemID.
-          example: ExampleSystem
-          type: string
-        userID:
-          description: The ID of the user that owns the system.
-          example: a115d9e3-6e78-4ddf-8676-a98c28ad8249
-          format: uuid
-          type: string
-        userName:
-          description: Name of the user belonging to the userID.
-          example: Max Mustermann
-          type: string
-        userMail:
-          description: E-Mail address of the user belonging to the userID.
-          example: max.mustermann@muster.de
-          type: string
-      required:
-      - gatewayID
-      - systemID
+      - type
       type: object
     ApplianceEventData:
       description: Payload for `appliance/*` events.
-      example:
-        applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
-        systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
-        serialNumber: "9312355"
-        systemName: ExampleSystem
-        kind: BATTERY
-        name: ExampleMeter
-        model: Baz
-        type: METER
-        gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
-        manufacturer: Iskraemeco
       properties:
         applianceID:
           description: ID of the appliance that caused this event.
@@ -782,11 +260,11 @@ components:
           type: string
         model:
           description: Model description of the appliance.
-          example: Baz
+          example: ExampleModel
           type: string
         manufacturer:
           description: Manufacturer of the appliance.
-          example: Iskraemeco
+          example: ExampleManufacturer
           type: string
         type:
           description: General type of the appliance.
@@ -801,8 +279,14 @@ components:
           example: METER
           type: string
         kind:
-          description: |
-            Kind of the appliance is used to provide further details on the appliance configuration and mode of operation. The kind property is only available for appliances with type INVERTER or METER. For inverters, only UNKNOWN, PV, BATTERY, HYBRID and PV_EXTERNAL are valid values. They describe the  kind of connected appliance(s) and define the role of the inverter in the system. For meters, kind specifies the appliance the meter is attached to. It resembles the location the meter is installed in.
+          description: "Kind of the appliance is used to provide further details on\
+            \ the appliance configuration and mode of \noperation. \n\nThe kind property\
+            \ is only available for appliances with type `INVERTER` or `METER`. \n\
+            \nFor inverters, only `UNKNOWN`, `PV`, `BATTERY`, `HYBRID` and `PV_EXTERNAL`\
+            \ are valid values. They describe \nthe kind of connected appliance(s)\
+            \ and define the role of the inverter in the system. \n\nFor meters, kind\
+            \ specifies the appliance the meter is attached to. It resembles the location\
+            \ the meter is \ninstalled in."
           enum:
           - UNKNOWN
           - PV
@@ -843,10 +327,292 @@ components:
       - gatewayID
       - systemID
       type: object
+    EVEnodeEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - deprecated: true
+        properties:
+          type:
+            enum:
+            - ev/create
+            - ev/delete
+            - ev/update
+            type: string
+          data:
+            $ref: "#/components/schemas/EVEnodeEventData"
+        type: object
+    EVEnodeEventData:
+      allOf:
+      - $ref: "#/components/schemas/EVEventDataBase"
+      - deprecated: true
+        properties:
+          enodeEventPayload:
+            additionalProperties: true
+            type: object
+        required:
+        - enodeEventPayload
+    EVEventDataBase:
+      description: Generic EVEvent.
+      properties:
+        systemID:
+          description: This field defines the id of the system in which the EV is
+            connected to.
+          format: uuid
+          type: string
+        assetID:
+          description: This field defines the id of the asset.
+          format: uuid
+          type: string
+        gatewayID:
+          description: This field defines the ID of gateway where the EV is linked
+            to.
+          format: uuid
+          type: string
+      required:
+      - assetID
+      - gatewayID
+      - systemID
+      type: object
+    EVControlEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - deprecated: true
+        properties:
+          type:
+            enum:
+            - ev/control
+            type: string
+          data:
+            $ref: "#/components/schemas/EVControlEventData"
+    EVControlEventData:
+      allOf:
+      - $ref: "#/components/schemas/EVEventDataBase"
+      - deprecated: true
+        properties:
+          eventPayload:
+            additionalProperties: true
+            type: object
+        required:
+        - eventPayload
+    EVMeasurementEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - ev/measurement
+            type: string
+          data:
+            $ref: "#/components/schemas/EVMeasurementEventData"
+    EVMeasurementEventData:
+      allOf:
+      - $ref: "#/components/schemas/EVEventDataBase"
+      - $ref: "#/components/schemas/EVStateChangeEventData"
+      - description: Measurement event (issued by the EV)
+        properties:
+          stateOfCharge:
+            description: |-
+              StateOfCharge specifies the vehicles battery level in as a value between
+              0.0% and 100.0%.
+            type: number
+          chargePower:
+            description: |-
+              ChargePower specifies the power with which the vehicle is currently
+              charging in mW Positive values mean charging, negative values mean
+              discharging (V2G, V2H).
+            format: int64
+            type: integer
+          range:
+            description: Range of the vehicle in meters
+            format: uint32
+            type: integer
+          chargeLimit:
+            description: |-
+              ChargeLimit is the limit configured by the vehicle owner at which state of
+              charge the vehicle should stop charging. Represented as a percentage
+              between 0% and 100%.
+            format: double
+            type: number
+          capacity:
+            description: Capacity specifies the capacity of the vehicles battery in
+              Wh.
+            format: uint32
+            type: integer
+        required:
+        - chargePower
+        type: object
+    EVStateChangeEventData:
+      allOf:
+      - $ref: "#/components/schemas/EVEventDataBase"
+      description: Generic State change event (issued by the EV)
+      properties:
+        issuedAt:
+          description: When the event was issued by the EV (It might take some time
+            for the event reach us).
+          format: date-time
+          type: string
+        atHome:
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
+          type: boolean
+      required:
+      - atHome
+      - issuedAt
+      - state
+      type: object
+    EVPluggedEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - ev/plugged
+            - ev/unplugged
+            type: string
+          data:
+            $ref: "#/components/schemas/EVPluggedEventData"
+    EVPluggedEventData:
+      allOf:
+      - $ref: "#/components/schemas/EVEventDataBase"
+      - $ref: "#/components/schemas/EVStateChangeEventData"
+      - properties:
+          state:
+            description: State defines whether the vehicle is currently plugged in
+            enum:
+            - PLUGGED
+            - UNPLUGGED
+            type: string
+        required:
+        - state
+        type: object
+    EVChargeSessionEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - ev/charge-started
+            - ev/charge-stopped
+            type: string
+          data:
+            $ref: "#/components/schemas/EVChargeSessionEventData"
+    EVChargeSessionEventData:
+      allOf:
+      - $ref: "#/components/schemas/EVEventDataBase"
+      - $ref: "#/components/schemas/EVStateChangeEventData"
+      - properties:
+          state:
+            description: ChargeState defines whether the vehicle is charging
+            enum:
+            - CHARGING
+            - STOPPED
+            type: string
+        required:
+        - state
+    GatewayEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - gateway/create
+            - gateway/offline
+            - gateway/online
+            type: string
+          data:
+            $ref: "#/components/schemas/GatewayEventData"
+    GatewayEventData:
+      description: Payload for `gateway/*` events.
+      properties:
+        gatewayID:
+          description: The ID of the gateway this event is triggered for.
+          example: 680d63aa-6e1d-4447-af7c-35c5eb6ca810
+          format: uuid
+          type: string
+        gatewayName:
+          description: The name of the gateway corresponding to the gatewayID.
+          example: My gridBox
+          type: string
+        gatewaySerialnumber:
+          description: The serialnumber of the gateway corresponding to the gatewayID.
+          example: D403-007-000-000-001-B-X
+          type: string
+        systemID:
+          description: The ID of the system this event is triggered for.
+          example: af87d7b3-316f-4d26-868c-4ae351095bdc
+          format: uuid
+          type: string
+        systemName:
+          description: The name of the system corresponding to the systemID.
+          example: ExampleSystem
+          type: string
+        userID:
+          description: The ID of the user that owns the system.
+          example: a115d9e3-6e78-4ddf-8676-a98c28ad8249
+          format: uuid
+          type: string
+        userName:
+          description: Name of the user belonging to the userID.
+          example: Max Mustermann
+          type: string
+        userMail:
+          description: E-Mail address of the user belonging to the userID.
+          example: max.mustermann@muster.de
+          type: string
+      required:
+      - gatewayID
+      - systemID
+      title: Gateway event
+      type: object
+    GSP14aSignalEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - grid-signal-processor/limitation-of-power-consumption/set
+            - grid-signal-processor/limitation-of-power-consumption/unset
+            type: string
+          data:
+            $ref: "#/components/schemas/GSP14aSignalEventData"
+    GSP14aSignalEventData:
+      description: Payload for `grid-signal-processor/limitation-of-power-consumption/*`
+        events.
+      properties:
+        newLPC:
+          description: "Represents the new limitation of power consumption in milliwatt.\
+            \ It can be omitted in case there was a limit \nand now there is not."
+          format: float
+          type: number
+        receivedAt:
+          description: Timestamp at which the gridbox received the control signal.
+          format: date-time
+          type: string
+        validUntil:
+          description: Timestamp until which the control signal is valid.
+          format: date-time
+          type: string
+      title: Grid signal processor limitation of power consumption event
+      type: object
+    InverterEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - inverter/status
+            type: string
+          data:
+            $ref: "#/components/schemas/InverterEventData"
+        type: object
     InverterEventData:
       allOf:
-      - $ref: '#/components/schemas/ApplianceEventData'
-      - properties:
+      - $ref: "#/components/schemas/ApplianceEventData"
+      - description: "Payload for `inverter/*` events. \n\nThe event describes the\
+          \ change of an inverter from one status to a new one. The old status is\
+          \ referred to as the \nlastStatus."
+        properties:
           status:
             description: Current (new) status of the inverter.
             enum:
@@ -866,89 +632,119 @@ components:
             example: ERROR
             type: string
           errCode:
-            description: |
-              Current (new) error code as returned by the appliance. The value depends on the appliance manufacturer, model and firmware. Please refer to the manufacturers specification.
+            description: "Current (new) error code as returned by the appliance. The\
+              \ value depends on the appliance manufacturer, \nmodel and firmware.\
+              \ Please refer to the manufacturers specification."
             type: string
           lastErrCode:
-            description: |
-              Last error code as returned by the appliance. The value depends on the appliance manufacturer, model and firmware. Please refer to the manufacturers specification.
+            description: "Last error code as returned by the appliance. The value\
+              \ depends on the appliance manufacturer, model and \nfirmware. Please\
+              \ refer to the manufacturers specification.\n"
             example: F71A
             type: string
         required:
         - lastStatus
         - status
+        title: Inverter status event
         type: object
-      description: |
-        Payload for `inverter/*` events. The event describes the change of an inverter from one status to a new one. The old status is referred to as the lastStatus.
-      example:
-        applianceID: fc0a6ac7-64ce-4276-a7cd-bace946af433
-        systemID: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
-        serialNumber: "9312355"
-        kind: BATTERY
-        type: METER
-        lastErrCode: F71A
-        manufacturer: Iskraemeco
-        systemName: ExampleSystem
-        errCode: errCode
-        name: ExampleMeter
-        model: Baz
-        gatewayID: 25ccab17-cd40-4db1-a320-a986d1c15fb1
-        lastStatus: ERROR
-        status: OK
-    EVEventData:
+    PingEvent:
       allOf:
-      - $ref: '#/components/schemas/ApplianceEventData'
+      - $ref: "#/components/schemas/WebhookEventBase"
       - properties:
-          evseID:
-            description: Electirc Vehicle Supply Equipment ID
-            example: FR*A23*E45B*78C
-            type: string
-          state:
-            description: State of the EV charging station.
+          type:
             enum:
-            - plugged
-            example: plugged
+            - ping
             type: string
-        required:
-        - state
-        type: object
-      description: |
-        Payload for `ev/*` events. The event describes the change of an EV's state at a charging station.
-    CommissioningData:
-      description: Payload for `commissioning/done` events.
-      example:
-        customerAddress: "Straße Str. 1, 20359, Hamburg, Germany"
-        gatewaySerialnumber: D403-007-000-000-001-B-X
-        systemName: Test system
-        customerEmail: test@email.com
-        customerID: 1a81c4f4-5f6c-48e6-be91-2528c1c0bb28
+          data:
+            $ref: "#/components/schemas/PingEventData"
+    PingEventData:
+      description: Payload for `ping` events.
       properties:
-        customerID:
-          description: The ID of the newly created customer after the commissioning
-            process.
-          example: 1a81c4f4-5f6c-48e6-be91-2528c1c0bb28
+        message:
+          type: string
+      type: object
+    SystemActionEvent:
+      allOf:
+      - $ref: "#/components/schemas/WebhookEventBase"
+      - properties:
+          type:
+            enum:
+            - ping
+            type: string
+          data:
+            $ref: "#/components/schemas/SystemActionEventData"
+    SystemActionEventData:
+      properties:
+        id:
+          description: ID of the action.
           format: uuid
           type: string
-        customerEmail:
-          description: The email of the newly created customer after the commissioning
-            process.
-          example: test@email.com
-          format: email
+        type:
+          description: Type of asset.
+          enum:
+          - EV
           type: string
-        customerAddress:
-          description: The address of the newly created customer after the commissioning
-            process.
-          example: "Straße Str. 1, 20359, Hamburg, Germany"
-          format: string
+        manufacturer:
+          description: Manufacturer of the asset.
+          example: Audi
           type: string
-        systemName:
-          description: The name of the commissioned system.
-          example: Test system
-          format: string
+        domain:
+          description: Describes whether the user action relates to the device itself
+            or the vendor user account used to access the device.
+          enum:
+          - Account
+          - Device
           type: string
-        gatewaySerialnumber:
-          description: The serialnumber of the gateway corresponding to the commissioned
-            system.
-          example: D403-007-000-000-001-B-X
+        introducedAt:
+          description: ISO8601 UTC timestamp of when the user action was introduced.
+          format: date-time
           type: string
+        resolution:
+          $ref: "#/components/schemas/SystemActionEventData_resolution"
+      required:
+      - domain
+      - id
+      - introducedAt
+      - manufacturer
+      - resolution
+      - type
+      type: object
+    ArbitraryErrorResponse:
+      additionalProperties: true
+      description: Optional arbitrary JSON data.
+      nullable: true
+      type: object
+    SystemActionEventData_resolution:
+      properties:
+        description:
+          description: A localized description of how to solve. Formatted as Markdown.
+          example: "To gain access to your vehicle's telemetry data, it's necessary\
+            \ to accept Audi's terms and conditions. Follow these steps to proceed:<br><br>1.\
+            \ Open the **myAudi app** on your phone<br>2. Follow the prompts to accept\
+            \ Audi's terms and conditions"
+          type: string
+        title:
+          description: A localized title for the user action.
+          example: Accept the Audi terms and conditions
+          type: string
+        access:
+          description: Where the action needs to be taken. i.e. remotely using the
+            vendor's app or directly in the vehicle.
+          enum:
+          - Remote
+          - Physical
+          type: string
+        agent:
+          description: |-
+            Who can resolve the action. i.e. a user can resolve themselves,
+            or a licensed service retailer is needed.
+          enum:
+          - User
+          - ThirdParty
+          type: string
+      required:
+      - access
+      - agent
+      - description
+      - title
       type: object
