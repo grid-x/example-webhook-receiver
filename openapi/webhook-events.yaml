@@ -113,6 +113,7 @@ components:
         - $ref: '#/components/schemas/EVMeasurementEvent'
         - $ref: '#/components/schemas/EVPluggedEvent'
         - $ref: '#/components/schemas/EVChargeSessionEvent'
+        - $ref: '#/components/schemas/EVChargeSessionFailedEvent'
         - $ref: '#/components/schemas/GatewayEvent'
         - $ref: '#/components/schemas/GSP14aSignalEvent'
         - $ref: '#/components/schemas/InverterEvent'
@@ -126,6 +127,7 @@ components:
           appliance/offline: '#/components/schemas/ApplianceEvent'
           appliance/online: '#/components/schemas/ApplianceEvent'
           appliance/update: '#/components/schemas/ApplianceEvent'
+          ev/charge-failed: '#/components/schemas/EVChargeSessionFailedEvent'
           ev/charge-started: '#/components/schemas/EVChargeSessionEvent'
           ev/charge-stopped: '#/components/schemas/EVChargeSessionEvent'
           ev/control: '#/components/schemas/EVControlEvent'
@@ -288,7 +290,66 @@ components:
               enum:
                 - CHARGING
                 - STOPPED
+                - FAILED
               description: ChargeState defines whether the vehicle is charging
+    EVChargeSessionFailedEvent:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/charge-failed
+            data:
+              $ref: '#/components/schemas/EVChargeSessionFailedEventData'
+    EVChargeSessionFailedEventData:
+      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+      allOf:
+        - $ref: '#/components/schemas/EVEventDataBase'
+        - $ref: '#/components/schemas/EVStateChangeEventData'
+        - required:
+            - state
+          properties:
+            state:
+              description: ChargeState defines whether the vehicle is charging
+              type: string
+              enum:
+                - FAILED
+            atHome:
+              description: |-
+                atHome specifies if the vehicle is currently at the users home location and is used 
+                to make decisions on whether to control charging behaviour
+              type: boolean
+            failureReason:
+              $ref: '#/components/schemas/EVChargeSessionFailureReason'
+    EVChargeSessionFailureReason:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - NO_RESPONSE
+            - FAILED_PRECONDITION
+            - CONFLICT
+            - NOT_FOUND
+            - REQUESTED_CANCELLATION
+          description: |-
+            A machine-readable high level error category.
+            
+            NO_RESPONSE: The chargeable device did not react to our charge commands within the command's timeout window.
+            FAILED_PRECONDITION: The chargeable device did not meet all required preconditions for this command to be executed during the command's timeout window.
+            CONFLICT: A newer command for this chargeable has been created. This command is now abandoned.
+            NOT_FOUND: The chargeable was deleted while the command was PENDING
+            REQUESTED_CANCELLATION: This command was cancelled by request of the controlling owner.
+        detail:
+          type: string
+          description: A human-readable explanation of why the charging command was unsuccessful.
+        required:
+          - type
+          - detail
+        description: Reason why a given command has failed.
+
     EVControlEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
@@ -534,7 +595,7 @@ components:
           title: Inverter status event
           description: |-
             Payload for `inverter/*` events. 
-    
+            
             The event describes the change of an inverter from one status to a new one. The old status is referred to as the 
             lastStatus.
           required:

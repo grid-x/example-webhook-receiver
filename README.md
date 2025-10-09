@@ -182,6 +182,7 @@ We support the following event types on a webhook subscription:
 - `appliance/offline`: An appliance's state switched offline. 
 - `appliance/online`: An appliance's state switched online.
 - `appliance/upate`: An appliance has been update.
+- `ev/charge-failed`: Charging has failed for an electric vehicle.
 - `ev/charge-started`: Charging has started for an electric vehicle.
 - `ev/charge-stopped`: Charging has stopped for an electric vehicle.
 - `ev/control` (**deprecated**)
