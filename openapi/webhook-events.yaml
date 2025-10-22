@@ -345,11 +345,10 @@ components:
         detail:
           type: string
           description: A human-readable explanation of why the charging command was unsuccessful.
-        required:
-          - type
-          - detail
-        description: Reason why a given command has failed.
-
+      required:
+        - type
+        - detail
+      description: Reason why a given command has failed.
     EVControlEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
