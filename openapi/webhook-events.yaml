@@ -475,7 +475,6 @@ components:
       # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       type: object
       required:
-        - state
         - issuedAt
         - atHome
       properties:
