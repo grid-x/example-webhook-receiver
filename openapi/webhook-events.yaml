@@ -59,7 +59,6 @@ components:
         https://github.com/cloudevents/spec/blob/v1.0.1/spec.md).
       required:
         - id
-        - accountID
         - source
         - specVersion
         - time
@@ -95,7 +94,7 @@ components:
             triggered the event.
           example: /systems/5eda17ec-4dc9-46d5-b3b8-c396f75a760f
           type: string
-        correlationID:
+        correlationId:
           description: Correlation ID to identify the request triggering the event.
           format: uuid
           type: string
@@ -165,7 +164,6 @@ components:
       required:
         - applianceID
         - gatewayID
-        - systemID
       properties:
         applianceID:
           description: ID of the appliance that caused this event.
@@ -235,6 +233,16 @@ components:
           description: Serial number of the appliance as returned by the appliance.
           example: "9312355"
           type: string
+        firmware:
+          description: Firmware version of the appliance.
+          type: string
+        parent:
+          description: ID of the parent appliance, if any.
+          type: string
+        gatewayType:
+          description: Type of the gateway the appliance is connected to.
+          example: GRIDBOX
+          type: string
         systemID:
           description: The ID of the system that the gateway and appliance run in.
           example: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
@@ -265,6 +273,10 @@ components:
           type: string
           format: uuid
           description: This field defines the ID of gateway where the EV is linked to.
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
     EVChargeSessionEvent:
       # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       allOf:
@@ -307,9 +319,9 @@ components:
       # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       allOf:
         - $ref: '#/components/schemas/EVEventDataBase'
-        - $ref: '#/components/schemas/EVStateChangeEventData'
         - required:
             - state
+            - atHome
           properties:
             state:
               description: ChargeState defines whether the vehicle is charging
@@ -444,6 +456,33 @@ components:
               type: integer
               format: uint32
               description: Capacity specifies the capacity of the vehicles battery in Wh.
+            chargeState:
+              type: string
+              description: |-
+                When plugged, indicates whether the vehicle is charging or not.
+                When not plugged, this field returns "" (empty).
+              enum:
+                - CHARGING
+                - COMPLETE
+                - DISCHARGING
+                - ""
+                - FAULT
+                - INITIALIZING
+                - NO_POWER
+                - STOPPED
+            plugState:
+              type: string
+              description: PlugState defines whether the vehicle is currently plugged in.
+              enum:
+                - PLUGGED
+                - UNPLUGGED
+                - UNKNOWN
+            isControllable:
+              type: boolean
+              description: |-
+                IsControllable defines if the vehicle's charging can currently be controlled.
+                Reasons for not being controllable could be that the vehicle is not at home or
+                that it lacks the capability to receive control commands.
     EVPluggedEvent:
       # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       allOf:
@@ -475,7 +514,6 @@ components:
       # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       type: object
       required:
-        - state
         - issuedAt
         - atHome
       properties:
@@ -524,6 +562,9 @@ components:
           description: The serialnumber of the gateway corresponding to the gatewayID.
           example: D403-007-000-000-001-B-X
           type: string
+        gatewayDeviceID:
+          description: Internal device ID of the gateway.
+          type: string
         systemID:
           description: The ID of the system this event is triggered for.
           example: af87d7b3-316f-4d26-868c-4ae351095bdc
@@ -566,7 +607,7 @@ components:
           type: number
           format: float
           description: |-
-            Represents the new limitation of power consumption in milliwatt. It can be omitted in case there was a limit 
+            Represents the new limitation of power consumption in watts. It can be omitted in case there was a limit 
             and now there is not.
         receivedAt:
           type: string
@@ -654,7 +695,7 @@ components:
             type:
               type: string
               enum:
-                - ping
+                - system/action
             data:
               $ref: '#/components/schemas/SystemActionEventData'
     SystemActionEventData:
@@ -667,6 +708,11 @@ components:
         - domain
         - introducedAt
         - resolution
+        - gatewayID
+        - assetID
+        - systemID
+        - status
+        - capabilities
       properties:
         id:
           type: string
@@ -691,6 +737,35 @@ components:
           type: string
           format: date-time
           description: ISO8601 UTC timestamp of when the user action was introduced.
+        gatewayID:
+          type: string
+          format: uuid
+          description: ID of the gateway the asset is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: ID of the asset the action relates to.
+        systemID:
+          type: string
+          format: uuid
+          description: ID of the system the asset belongs to.
+        status:
+          type: string
+          enum:
+            - OPEN
+            - SOLVED
+          description: Whether the action is currently open or has been resolved.
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum:
+              - chargeState
+              - information
+              - location
+              - startCharging
+              - stopCharging
+          description: List of asset capabilities affected by this action.
         resolution:
           type: object
           properties:
@@ -716,6 +791,12 @@ components:
               description: |-
                 Who can resolve the action. i.e. a user can resolve themselves,
                 or a licensed service retailer is needed.
+            action:
+              type: string
+              enum:
+                - Link
+                - LinkAdditionalAsset
+              description: Optional action to take to resolve the user action.
           required:
             - description
             - title
