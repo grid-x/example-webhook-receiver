@@ -607,7 +607,7 @@ components:
           type: number
           format: float
           description: |-
-            Represents the new limitation of power consumption in watts. It can be omitted in case there was a limit 
+            Represents the new limitation of power consumption in milliwatt. It can be omitted in case there was a limit 
             and now there is not.
         receivedAt:
           type: string
