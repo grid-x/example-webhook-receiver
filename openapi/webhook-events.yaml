@@ -107,8 +107,6 @@ components:
     WebhookEventRequest:
       oneOf:
         - $ref: '#/components/schemas/ApplianceEvent'
-        - $ref: '#/components/schemas/EVEnodeEvent'
-        - $ref: '#/components/schemas/EVControlEvent'
         - $ref: '#/components/schemas/EVMeasurementEvent'
         - $ref: '#/components/schemas/EVPluggedEvent'
         - $ref: '#/components/schemas/EVUnpluggedEvent'
@@ -131,13 +129,9 @@ components:
           ev/charge-failed: '#/components/schemas/EVChargeSessionFailedEvent'
           ev/charge-started: '#/components/schemas/EVChargeStartedEvent'
           ev/charge-stopped: '#/components/schemas/EVChargeStoppedEvent'
-          ev/control: '#/components/schemas/EVControlEvent'
-          ev/create: '#/components/schemas/EVEnodeEvent'
-          ev/delete: '#/components/schemas/EVEnodeEvent'
           ev/measurement: '#/components/schemas/EVMeasurementEvent'
           ev/plugged: '#/components/schemas/EVPluggedEvent'
           ev/unplugged: '#/components/schemas/EVUnpluggedEvent'
-          ev/update: '#/components/schemas/EVEnodeEvent'
           gateway/create: '#/components/schemas/GatewayEvent'
           gateway/offline: '#/components/schemas/GatewayEvent'
           gateway/online: '#/components/schemas/GatewayEvent'
@@ -487,76 +481,6 @@ components:
             - type
             - detail
           description: Reason why a given command has failed.
-    EVControlEvent:
-      allOf:
-        - $ref: '#/components/schemas/WebhookEventBase'
-        - deprecated: true
-          properties:
-            type:
-              type: string
-              enum:
-                - ev/control
-            data:
-              $ref: '#/components/schemas/EVControlEventData'
-    EVControlEventData:
-      allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-        - deprecated: true
-          required:
-            - eventPayload
-          properties:
-            eventPayload:
-              type: object
-              additionalProperties: true
-    EVEnodeEvent:
-      allOf:
-        - $ref: '#/components/schemas/WebhookEventBase'
-        - type: object
-          deprecated: true
-          properties:
-            type:
-              type: string
-              enum:
-                - ev/create
-                - ev/delete
-                - ev/update
-            data:
-              $ref: '#/components/schemas/EVEnodeEventData'
-    EVEnodeEventData:
-      allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-        - deprecated: true
-          required:
-            - enodeEventPayload
-          properties:
-            enodeEventPayload:
-              type: object
-              additionalProperties: true
-    EVEventDataBase:
-      type: object
-      description: Generic EVEvent.
-      required:
-        - type
-        - systemID
-        - assetID
-        - gatewayID
-      properties:
-        type:
-          type: string
-          description: The type of the asset issuing the event.
-          example: EV
-        systemID:
-          type: string
-          format: uuid
-          description: This field defines the id of the system in which the EV is connected to.
-        assetID:
-          type: string
-          format: uuid
-          description: This field defines the id of the asset.
-        gatewayID:
-          type: string
-          format: uuid
-          description: This field defines the ID of gateway where the EV is linked to.
     EVMeasurementEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
