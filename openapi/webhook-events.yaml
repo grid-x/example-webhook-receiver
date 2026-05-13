@@ -111,7 +111,9 @@ components:
         - $ref: '#/components/schemas/EVControlEvent'
         - $ref: '#/components/schemas/EVMeasurementEvent'
         - $ref: '#/components/schemas/EVPluggedEvent'
-        - $ref: '#/components/schemas/EVChargeSessionEvent'
+        - $ref: '#/components/schemas/EVUnpluggedEvent'
+        - $ref: '#/components/schemas/EVChargeStartedEvent'
+        - $ref: '#/components/schemas/EVChargeStoppedEvent'
         - $ref: '#/components/schemas/EVChargeSessionFailedEvent'
         - $ref: '#/components/schemas/GatewayEvent'
         - $ref: '#/components/schemas/GSP14aSignalEvent'
@@ -127,14 +129,14 @@ components:
           appliance/online: '#/components/schemas/ApplianceEvent'
           appliance/update: '#/components/schemas/ApplianceEvent'
           ev/charge-failed: '#/components/schemas/EVChargeSessionFailedEvent'
-          ev/charge-started: '#/components/schemas/EVChargeSessionEvent'
-          ev/charge-stopped: '#/components/schemas/EVChargeSessionEvent'
+          ev/charge-started: '#/components/schemas/EVChargeStartedEvent'
+          ev/charge-stopped: '#/components/schemas/EVChargeStoppedEvent'
           ev/control: '#/components/schemas/EVControlEvent'
           ev/create: '#/components/schemas/EVEnodeEvent'
           ev/delete: '#/components/schemas/EVEnodeEvent'
           ev/measurement: '#/components/schemas/EVMeasurementEvent'
           ev/plugged: '#/components/schemas/EVPluggedEvent'
-          ev/unplugged: '#/components/schemas/EVPluggedEvent'
+          ev/unplugged: '#/components/schemas/EVUnpluggedEvent'
           ev/update: '#/components/schemas/EVEnodeEvent'
           gateway/create: '#/components/schemas/GatewayEvent'
           gateway/offline: '#/components/schemas/GatewayEvent'
@@ -252,15 +254,43 @@ components:
           description: Name of the system as defined by the customer.
           example: ExampleSystem
           type: string
-    EVEventDataBase:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+    EVChargeStartedEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/charge-started
+            data:
+              $ref: '#/components/schemas/EVChargingStartEventData'
+      description: Event fired when an EV starts charging.
+    EVChargingStartEventData:
       type: object
-      description: Generic EVEvent.
+      description: Charge State change event (issued by the EV).
       required:
+        - issuedAt
+        - atHome
+        - type
         - systemID
         - assetID
         - gatewayID
+        - chargePower
+        - state
       properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: When the event was issued by the EV (It might take some time for the event reach us).
+        atHome:
+          type: boolean
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
         systemID:
           type: string
           format: uuid
@@ -273,39 +303,100 @@ components:
           type: string
           format: uuid
           description: This field defines the ID of gateway where the EV is linked to.
-        type:
+        stateOfCharge:
+          type: number
+          format: double
+          description: |-
+            StateOfCharge specifies the vehicles battery level as a value between 0.0%
+            and 100.0%.
+        chargePower:
+          type: integer
+          format: int64
+          description: |-
+            ChargePower specifies the power with which the vehicle is currently
+            charging in mW. Positive values mean charging, negative values mean
+            discharging (V2G, V2H).
+        range:
+          type: integer
+          format: uint32
+          description: Range of the vehicle in meters
+        state:
           type: string
-          description: The type of the asset issuing the event.
-          example: EV
-    EVChargeSessionEvent:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+          enum:
+            - CHARGING
+          description: Indicates that the vehicle is charging
+    EVChargeStoppedEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
         - properties:
             type:
               type: string
               enum:
-                - ev/charge-started
                 - ev/charge-stopped
             data:
-              $ref: '#/components/schemas/EVChargeSessionEventData'
-    EVChargeSessionEventData:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
-      allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-        - $ref: '#/components/schemas/EVStateChangeEventData'
-        - required:
-            - state
-          properties:
-            state:
-              type: string
-              enum:
-                - CHARGING
-                - STOPPED
-                - FAILED
-              description: ChargeState defines whether the vehicle is charging
+              $ref: '#/components/schemas/EVChargingStopEventData'
+      description: Event fired when an EV stops charging.
+    EVChargingStopEventData:
+      type: object
+      description: Charge State change event (issued by the EV).
+      required:
+        - issuedAt
+        - atHome
+        - type
+        - systemID
+        - assetID
+        - gatewayID
+        - chargePower
+        - state
+      properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: When the event was issued by the EV (It might take some time for the event reach us).
+        atHome:
+          type: boolean
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
+        systemID:
+          type: string
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
+        stateOfCharge:
+          type: number
+          format: double
+          description: |-
+            StateOfCharge specifies the vehicles battery level as a value between 0.0%
+            and 100.0%.
+        chargePower:
+          type: integer
+          format: int64
+          description: |-
+            ChargePower specifies the power with which the vehicle is currently
+            charging in mW. Positive values mean charging, negative values mean
+            discharging (V2G, V2H).
+        range:
+          type: integer
+          format: uint32
+          description: Range of the vehicle in meters
+        state:
+          type: string
+          enum:
+            - STOPPED
+          description: Indicates that the vehicle is not charging
     EVChargeSessionFailedEvent:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
         - properties:
@@ -315,52 +406,87 @@ components:
                 - ev/charge-failed
             data:
               $ref: '#/components/schemas/EVChargeSessionFailedEventData'
+      description: Event fired when an EV fails to accept a start or a stop command.
     EVChargeSessionFailedEventData:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
-      allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-        - required:
-            - state
-            - atHome
-          properties:
-            state:
-              description: ChargeState defines whether the vehicle is charging
-              type: string
-              enum:
-                - FAILED
-            atHome:
-              description: |-
-                atHome specifies if the vehicle is currently at the users home location and is used 
-                to make decisions on whether to control charging behaviour
-              type: boolean
-            failureReason:
-              $ref: '#/components/schemas/EVChargeSessionFailureReason'
-    EVChargeSessionFailureReason:
       type: object
+      description: Generic EVEvent with fail reason.
+      required:
+        - issuedAt
+        - atHome
+        - type
+        - systemID
+        - assetID
+        - gatewayID
+        - createdAt
+        - completedAt
+        - kind
+        - failureReason
       properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: When the event was issued by the EV (It might take some time for the event reach us).
+        atHome:
+          type: boolean
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
         type:
           type: string
-          enum:
-            - NO_RESPONSE
-            - FAILED_PRECONDITION
-            - CONFLICT
-            - NOT_FOUND
-            - REQUESTED_CANCELLATION
-          description: |-
-            A machine-readable high level error category.
-            
-            NO_RESPONSE: The chargeable device did not react to our charge commands within the command's timeout window.
-            FAILED_PRECONDITION: The chargeable device did not meet all required preconditions for this command to be executed during the command's timeout window.
-            CONFLICT: A newer command for this chargeable has been created. This command is now abandoned.
-            NOT_FOUND: The chargeable was deleted while the command was PENDING
-            REQUESTED_CANCELLATION: This command was cancelled by request of the controlling owner.
-        detail:
+          description: The type of the asset issuing the event.
+          example: EV
+        systemID:
           type: string
-          description: A human-readable explanation of why the charging command was unsuccessful.
-      required:
-        - type
-        - detail
-      description: Reason why a given command has failed.
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
+        createdAt:
+          type: string
+          format: date-time
+          description: Time when the command was sent
+        completedAt:
+          type: string
+          format: date-time
+          description: Time when the error was reported
+        kind:
+          type: string
+          enum:
+            - START
+            - STOP
+          description: The charging command to perform
+        failureReason:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - NO_RESPONSE
+                - FAILED_PRECONDITION
+                - CONFLICT
+                - NOT_FOUND
+                - REQUESTED_CANCELLATION
+              description: |-
+                A machine-readable high level error category.
+
+                NO_RESPONSE: The chargeable device did not react to our charge commands within the command's timeout window.
+                FAILED_PRECONDITION: The chargeable device did not meet all required preconditions for this command to be executed during the command's timeout window.
+                CONFLICT: A newer command for this chargeable has been created. This command is now abandoned.
+                NOT_FOUND: The chargeable was deleted while the command was PENDING
+                REQUESTED_CANCELLATION: This command was cancelled by request of the controlling owner.
+            detail:
+              type: string
+              description: A human-readable explanation of why the charging command was unsuccessful.
+          required:
+            - type
+            - detail
+          description: Reason why a given command has failed.
     EVControlEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
@@ -373,7 +499,6 @@ components:
             data:
               $ref: '#/components/schemas/EVControlEventData'
     EVControlEventData:
-      # See https://github.com/grid-x/notifications/blob/master/pkg/events/event.go#L279
       allOf:
         - $ref: '#/components/schemas/EVEventDataBase'
         - deprecated: true
@@ -398,7 +523,6 @@ components:
             data:
               $ref: '#/components/schemas/EVEnodeEventData'
     EVEnodeEventData:
-      # See https://github.com/grid-x/notifications/blob/master/pkg/events/event.go#L243
       allOf:
         - $ref: '#/components/schemas/EVEventDataBase'
         - deprecated: true
@@ -408,8 +532,32 @@ components:
             enodeEventPayload:
               type: object
               additionalProperties: true
+    EVEventDataBase:
+      type: object
+      description: Generic EVEvent.
+      required:
+        - type
+        - systemID
+        - assetID
+        - gatewayID
+      properties:
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
+        systemID:
+          type: string
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
     EVMeasurementEvent:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
         - properties:
@@ -420,102 +568,19 @@ components:
             data:
               $ref: '#/components/schemas/EVMeasurementEventData'
     EVMeasurementEventData:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
-      allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-        - $ref: '#/components/schemas/EVStateChangeEventData'
-        - type: object
-          description: Measurement event (issued by the EV)
-          required:
-            - chargePower
-          properties:
-            stateOfCharge:
-              type: number
-              description: |-
-                StateOfCharge specifies the vehicles battery level in as a value between
-                0.0% and 100.0%.
-            chargePower:
-              type: integer
-              format: int64
-              description: |-
-                ChargePower specifies the power with which the vehicle is currently
-                charging in mW Positive values mean charging, negative values mean
-                discharging (V2G, V2H).
-            range:
-              type: integer
-              format: uint32
-              description: Range of the vehicle in meters
-            chargeLimit:
-              type: number
-              format: double
-              description: |-
-                ChargeLimit is the limit configured by the vehicle owner at which state of
-                charge the vehicle should stop charging. Represented as a percentage
-                between 0% and 100%.
-            capacity:
-              type: integer
-              format: uint32
-              description: Capacity specifies the capacity of the vehicles battery in Wh.
-            chargeState:
-              type: string
-              description: |-
-                When plugged, indicates whether the vehicle is charging or not.
-                When not plugged, this field returns "" (empty).
-              enum:
-                - CHARGING
-                - COMPLETE
-                - DISCHARGING
-                - ""
-                - FAULT
-                - INITIALIZING
-                - NO_POWER
-                - STOPPED
-            plugState:
-              type: string
-              description: PlugState defines whether the vehicle is currently plugged in.
-              enum:
-                - PLUGGED
-                - UNPLUGGED
-                - UNKNOWN
-            isControllable:
-              type: boolean
-              description: |-
-                IsControllable defines if the vehicle's charging can currently be controlled.
-                Reasons for not being controllable could be that the vehicle is not at home or
-                that it lacks the capability to receive control commands.
-    EVPluggedEvent:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
-      allOf:
-        - $ref: '#/components/schemas/WebhookEventBase'
-        - properties:
-            type:
-              type: string
-              enum:
-                - ev/plugged
-                - ev/unplugged
-            data:
-              $ref: '#/components/schemas/EVPluggedEventData'
-    EVPluggedEventData:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
-      allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-        - $ref: '#/components/schemas/EVStateChangeEventData'
-        - type: object
-          required:
-            - state
-          properties:
-            state:
-              type: string
-              enum:
-                - PLUGGED
-                - UNPLUGGED
-              description: State defines whether the vehicle is currently plugged in
-    EVStateChangeEventData:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       type: object
+      description: Measurement event (issued by the EV).
       required:
         - issuedAt
         - atHome
+        - type
+        - systemID
+        - assetID
+        - gatewayID
+        - chargePower
+        - chargeState
+        - plugState
+        - isControllable
       properties:
         issuedAt:
           type: string
@@ -526,9 +591,186 @@ components:
           description: |-
             atHome specifies if the vehicle is currently at the users home location
             and is used to make decisions on whether to control charging behaviour
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
+        systemID:
+          type: string
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
+        stateOfCharge:
+          type: number
+          format: double
+          description: |-
+            StateOfCharge specifies the vehicles battery level in as a value between
+            0.0% and 100.0%.
+        chargePower:
+          type: integer
+          format: int64
+          description: |-
+            ChargePower specifies the power with which the vehicle is currently
+            charging in mW Positive values mean charging, negative values mean
+            discharging (V2G, V2H).
+        range:
+          type: integer
+          format: uint32
+          description: Range of the vehicle in meters
+        chargeLimit:
+          type: number
+          format: double
+          description: |-
+            ChargeLimit is the limit configured by the vehicle owner at which state of
+            charge the vehicle should stop charging. Represented as a percentage
+            between 0% and 100%.
+        capacity:
+          type: integer
+          format: uint32
+          description: Capacity specifies the capacity of the vehicles battery in Wh.
+        chargeState:
+          type: string
+          description: |-
+            When plugged, indicates whether the vehicle is charging or not.
+            When not plugged, this field returns "" (empty).
+          enum:
+            - INITIALIZING
+            - CHARGING
+            - COMPLETE
+            - STOPPED
+            - FAULT
+            - NO_POWER
+            - DISCHARGING
+            - ""
+        plugState:
+          type: string
+          description: PlugState defines whether the vehicle is currently plugged in.
+          enum:
+            - PLUGGED
+            - UNPLUGGED
+            - UNKNOWN
+          example: PLUGGED
+        isControllable:
+          type: boolean
+          description: |-
+            IsControllable defines if the vehicle's charging can currently be
+            controlled by us. Reasons for not being controllable could be
+            that the vehicle is not at home or that it lacks the capability
+            to receive control commands, either because they are not supported
+            by the cloud provider for the EV model, or because an user action is required
+    EVPluggedEvent:
       allOf:
-        - $ref: '#/components/schemas/EVEventDataBase'
-      description: Generic State change event (issued by the EV)
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/plugged
+            data:
+              $ref: '#/components/schemas/EVPluggedEventData'
+      description: Event fired when an EV plugs to a charger.
+    EVPluggedEventData:
+      type: object
+      description: Plug State change event (issued by the EV).
+      required:
+        - issuedAt
+        - atHome
+        - type
+        - systemID
+        - assetID
+        - gatewayID
+        - state
+      properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: When the event was issued by the EV (It might take some time for the event reach us).
+        atHome:
+          type: boolean
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
+        systemID:
+          type: string
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
+        state:
+          type: string
+          enum:
+            - PLUGGED
+          description: State defines whether the vehicle is currently plugged in
+    EVUnpluggedEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/unplugged
+            data:
+              $ref: '#/components/schemas/EVUnpluggedEventData'
+      description: Event fired when an EV unplugs from a charger.
+    EVUnpluggedEventData:
+      type: object
+      description: Plug State change event (issued by the EV).
+      required:
+        - issuedAt
+        - atHome
+        - type
+        - systemID
+        - assetID
+        - gatewayID
+        - state
+      properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: When the event was issued by the EV (It might take some time for the event reach us).
+        atHome:
+          type: boolean
+          description: |-
+            atHome specifies if the vehicle is currently at the users home location
+            and is used to make decisions on whether to control charging behaviour
+        type:
+          type: string
+          description: The type of the asset issuing the event.
+          example: EV
+        systemID:
+          type: string
+          format: uuid
+          description: This field defines the id of the system in which the EV is connected to.
+        assetID:
+          type: string
+          format: uuid
+          description: This field defines the id of the asset.
+        gatewayID:
+          type: string
+          format: uuid
+          description: This field defines the ID of gateway where the EV is linked to.
+        state:
+          type: string
+          enum:
+            - UNPLUGGED
+          description: State defines whether the vehicle is currently unplugged
     GatewayEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
@@ -688,7 +930,6 @@ components:
         message:
           type: string
     SystemActionEvent:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
         - properties:
@@ -697,12 +938,12 @@ components:
               enum:
                 - system/action
             data:
-              $ref: '#/components/schemas/SystemActionEventData'
-    SystemActionEventData:
-      # See https://github.com/grid-x/cloud-connector/blob/main/docs/api/openapi.yaml
+              $ref: '#/components/schemas/UserActionEventPayload'
+    UserActionEventPayload:
       type: object
       required:
         - id
+        - capabilities
         - type
         - manufacturer
         - domain
@@ -712,12 +953,25 @@ components:
         - assetID
         - systemID
         - status
-        - capabilities
       properties:
         id:
           type: string
           format: uuid
           description: ID of the action.
+        capabilities:
+          type: array
+          items:
+            type: string
+            enum:
+              - chargeState
+              - information
+              - startCharging
+              - stopCharging
+              - location
+          description: Capability that can be unblocked by the user taking this action
+          example:
+            - chargeState
+            - location
         type:
           type: string
           enum:
@@ -737,68 +991,59 @@ components:
           type: string
           format: date-time
           description: ISO8601 UTC timestamp of when the user action was introduced.
+        resolution:
+          $ref: '#/components/schemas/UserActionResolution'
         gatewayID:
           type: string
-          format: uuid
-          description: ID of the gateway the asset is connected to.
+          description: The ID of the gateway that connects to the appliance.
         assetID:
           type: string
-          format: uuid
-          description: ID of the asset the action relates to.
+          description: ID of the appliance that caused this event.
         systemID:
           type: string
-          format: uuid
-          description: ID of the system the asset belongs to.
+          description: The ID of the system that the gateway and appliance run in.
         status:
           type: string
           enum:
             - OPEN
             - SOLVED
-          description: Whether the action is currently open or has been resolved.
-        capabilities:
-          type: array
-          items:
-            type: string
-            enum:
-              - chargeState
-              - information
-              - location
-              - startCharging
-              - stopCharging
-          description: List of asset capabilities affected by this action.
-        resolution:
-          type: object
-          properties:
-            description:
-              type: string
-              description: A localized description of how to solve. Formatted as Markdown.
-              example: To gain access to your vehicle's telemetry data, it's necessary to accept Audi's terms and conditions. Follow these steps to proceed:<br><br>1. Open the **myAudi app** on your phone<br>2. Follow the prompts to accept Audi's terms and conditions
-            title:
-              type: string
-              description: A localized title for the user action.
-              example: Accept the Audi terms and conditions
-            access:
-              type: string
-              enum:
-                - Remote
-                - Physical
-              description: Where the action needs to be taken. i.e. remotely using the vendor's app or directly in the vehicle.
-            agent:
-              type: string
-              enum:
-                - User
-                - ThirdParty
-              description: |-
-                Who can resolve the action. i.e. a user can resolve themselves,
-                or a licensed service retailer is needed.
-            action:
-              type: string
-              enum:
-                - Link
-                - LinkAdditionalAsset
-              description: Optional action to take to resolve the user action.
-          required:
-            - description
-            - title
-            - access
-            - agent
+          description: |-
+            Whether the user action is still open or has been solved.
+            OPEN: means that this user action is still open
+            SOLVED: means that the user has solved the issue.
+    UserActionResolution:
+      type: object
+      required:
+        - description
+        - title
+        - access
+        - agent
+      properties:
+        description:
+          type: string
+          description: A localized description of how to solve. Formatted as Markdown.
+          example: To gain access to your vehicle's telemetry data, it's necessary to accept Audi's terms and conditions. Follow these steps to proceed:<br><br>1. Open the **myAudi app** on your phone<br>2. Follow the prompts to accept Audi's terms and conditions
+        title:
+          type: string
+          description: A localized title for the user action.
+          example: Accept the Audi terms and conditions
+        access:
+          type: string
+          enum:
+            - Remote
+            - Physical
+          description: Where the action needs to be taken. i.e. remotely using the vendor's app or directly in the vehicle.
+        agent:
+          type: string
+          enum:
+            - User
+            - ThirdParty
+          description: |-
+            Who can resolve the action. i.e. a user can resolve themselves,
+            or a licensed service retailer is needed.
+        action:
+          type: string
+          enum:
+            - Link
+            - LinkAdditionalAsset
+          description: Action to be taken by the user to resolve the intervention.
