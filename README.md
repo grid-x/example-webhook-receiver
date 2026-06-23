@@ -300,29 +300,6 @@ in order to trigger a `ping` event for a webhook subscription.
 If we receive a successful response, we will ignore the response's body. Otherwise, we will try to parse the 
 response body as arbitrary JSON object and log it.
 
-### Consecutive failures
-
-> [!IMPORTANT]
->
-> **This feature won't be in place yet on 21 August 2025.**
-> 
-> We will only activate it, when the XENON dashboard supports subscribing to e-mail notifications for `webhook/failed` 
-> and `webhook/deactivated` events.
->
-> The timeline for this will be announced on the [developer community](
-> https://community.developer.gridx.de/tag/webhooks).
-
-> [!NOTE]
-> 
-> **After 10 consecutive failures on forwarding webhook events to a webhook subscription's target URL, we will 
-> automatically set this webhook subscription to inactive.** 
-
-The counter of consecutive failures increases per webhook event (no matter which event type), not per retry attempt. It 
-will be reset to 0 on each received successful response.
-
-We recommend subscribing to email notifications on `webhook/failed` and `webhook/deactivated` events in your account on 
-the XENON dashboard (see [here](#enable-e-mail-notifications)).
-
 ## Managing webhook subscriptions on the API
 
 When you finished implementing your webhook receiver, you can register a webhook subscription for it on the API by 
