@@ -188,6 +188,7 @@ We support the following event types on a webhook subscription:
 - `ev/control` (**deprecated**)
 - `ev/create`: A new electric vehicle has been created. (**deprecated**)
 - `ev/delete`: An electric vehicle has been deleted. (**deprecated**)
+- `ev/infeasible-charging-goals`
 - `ev/measurement`
 - `ev/plugged`: An electric vehicle has been plugged into a charging station. 
 - `ev/unplugged`: An electric vehicle has been plugged out of a charging station.
