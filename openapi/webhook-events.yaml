@@ -113,6 +113,7 @@ components:
         - $ref: '#/components/schemas/EVChargeStartedEvent'
         - $ref: '#/components/schemas/EVChargeStoppedEvent'
         - $ref: '#/components/schemas/EVChargeSessionFailedEvent'
+        - $ref: '#/components/schemas/EVInfeasibleChargingGoalsEvent'
         - $ref: '#/components/schemas/GatewayEvent'
         - $ref: '#/components/schemas/GSP14aSignalEvent'
         - $ref: '#/components/schemas/InverterEvent'
@@ -132,6 +133,7 @@ components:
           ev/measurement: '#/components/schemas/EVMeasurementEvent'
           ev/plugged: '#/components/schemas/EVPluggedEvent'
           ev/unplugged: '#/components/schemas/EVUnpluggedEvent'
+          ev/infeasible-charging-goals: '#/components/schemas/EVInfeasibleChargingGoalsEvent'
           gateway/create: '#/components/schemas/GatewayEvent'
           gateway/offline: '#/components/schemas/GatewayEvent'
           gateway/online: '#/components/schemas/GatewayEvent'
@@ -695,6 +697,89 @@ components:
           enum:
             - UNPLUGGED
           description: State defines whether the vehicle is currently unplugged
+    EVInfeasibleChargingGoalsEvent:
+      allOf:
+        - $ref: '#/components/schemas/WebhookEventBase'
+        - properties:
+            type:
+              type: string
+              enum:
+                - ev/infeasible-charging-goals
+            data:
+              $ref: '#/components/schemas/EVInfeasibleChargingGoalsEventData'
+      description: |-
+        Event fired when the configured EV charging goals cannot be met before the departure time.
+        Emitted each time a user updates their EV parameters and the feasibility check determines
+        that the target state of charge is not reachable given the available charging power and
+        time remaining until departure.
+    EVInfeasibleChargingGoalsEventData:
+      type: object
+      description: Payload for `ev/infeasible-charging-goals` events.
+      required:
+        - systemID
+        - assetID
+        - minRequestedSoC
+        - currentSoC
+        - departureAt
+        - energyNeededWh
+        - deliverableEnergyWh
+        - chargingPowerW
+      properties:
+        systemID:
+          type: string
+          format: uuid
+          description: The ID of the system in which the EV is connected.
+          example: 5eda17ec-4dc9-46d5-b3b8-c396f75a760f
+        assetID:
+          type: string
+          format: uuid
+          description: The ID of the EV asset.
+          example: fc0a6ac7-64ce-4276-a7cd-bace946af433
+        minRequestedSoC:
+          type: number
+          format: double
+          description: The minimum state of charge (%) the user wants to reach by departure.
+          example: 80.0
+        currentSoC:
+          type: number
+          format: double
+          description: The current state of charge (%) of the vehicle battery.
+          example: 42.0
+        departureAt:
+          type: string
+          format: date-time
+          description: The departure time configured by the user (RFC3339).
+          example: "2026-06-22T07:30:00Z"
+        maxStateOfCharge:
+          type: number
+          format: double
+          nullable: true
+          description: |-
+            The maximum state of charge (%) allowed by the driver constraint, if set.
+            The effective target SoC is min(minRequestedSoC, maxStateOfCharge).
+          example: 90.0
+        energyNeededWh:
+          type: number
+          format: double
+          description: Energy in Wh required to reach the target state of charge from the current state of charge.
+          example: 9200.0
+        deliverableEnergyWh:
+          type: number
+          format: double
+          description: |-
+            Energy in Wh that can realistically be delivered before departure,
+            calculated as chargingPowerW × hoursUntilDeparture.
+          example: 5400.0
+        chargingPowerW:
+          type: number
+          format: double
+          description: The charging power in W used for the feasibility calculation.
+          example: 3600.0
+        atHome:
+          type: boolean
+          nullable: true
+          description: Whether the vehicle is currently at the user's home location. Null if unknown.
+          example: true
     GatewayEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
