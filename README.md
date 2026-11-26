@@ -74,6 +74,20 @@ We support the following event types on a webhook subscription:
 - `inverter/status`: The status of an inverter has changed.
 - `system/action`
 
+> [!IMPORTANT]
+>
+> `ev/plugged` and `ev/unplugged` are emitted by two different sources, and the `data` payload differs between
+> them. Use the `data.type` property to tell them apart:
+>
+> - `EV`: the plug state was reported by a cloud-connected vehicle. The vehicle is identified by `assetID`, and
+>   `issuedAt` and `atHome` are always present.
+> - `EVSTATION`: the plug state was reported by an EV charging station connected through a gateway. The charging
+>   station is identified by `applianceID` and `evseID`, `atHome` is not sent, and `issuedAt` is optional.
+>
+> Note that `data.state` is upper case (`PLUGGED`) for `EV` and lower case (`plugged`) for `EVSTATION`.
+>
+> If you subscribe to these event types, make sure your receiver handles both shapes.
+
 ## Handling webhook event requests
 
 Events are sent via HTTP requests to webhook receivers.
