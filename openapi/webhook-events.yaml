@@ -603,6 +603,26 @@ components:
               $ref: '#/components/schemas/EVPluggedEventData'
       description: Event fired when an EV plugs to a charger.
     EVPluggedEventData:
+      description: |-
+        Payload for `ev/plugged` events.
+
+        A plug state change can be reported by two different sources, and the payload shape differs between them.
+        Use the `type` property to tell them apart:
+
+        - `EV`: reported by a cloud-connected vehicle. Identified by `assetID`.
+        - `EVSTATION`: reported by an EV charging station connected through a gateway. Identified by
+          `applianceID` and `evseID`.
+
+        Receivers subscribed to `ev/plugged` must be able to handle both shapes.
+      oneOf:
+        - $ref: '#/components/schemas/EVPluggedVehicleEventData'
+        - $ref: '#/components/schemas/EVCSPluggedEventData'
+      discriminator:
+        propertyName: type
+        mapping:
+          EV: '#/components/schemas/EVPluggedVehicleEventData'
+          EVSTATION: '#/components/schemas/EVCSPluggedEventData'
+    EVPluggedVehicleEventData:
       type: object
       description: Plug State change event (issued by the EV).
       required:
@@ -625,6 +645,8 @@ components:
             and is used to make decisions on whether to control charging behaviour
         type:
           type: string
+          enum:
+            - EV
           description: The type of the asset issuing the event.
           example: EV
         systemID:
@@ -644,6 +666,80 @@ components:
           enum:
             - PLUGGED
           description: State defines whether the vehicle is currently plugged in
+    EVCSPluggedEventData:
+      type: object
+      description: Plug State change event (reported by an EV charging station).
+      required:
+        - type
+        - gatewayID
+        - applianceID
+        - state
+      properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: |-
+            When the plug state was measured on the gateway.
+
+            This property is optional. It is omitted when the charging station did not report a measurement
+            timestamp, in which case the envelope's `time` property is the best available approximation.
+          example: "2026-06-22T07:30:00Z"
+        type:
+          type: string
+          enum:
+            - EVSTATION
+          description: The type of the appliance issuing the event.
+          example: EVSTATION
+        state:
+          type: string
+          enum:
+            - plugged
+          description: State defines whether the vehicle is currently plugged in
+        systemID:
+          type: string
+          format: uuid
+          description: The ID of the system the charging station runs in.
+          example: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+        systemName:
+          type: string
+          description: Name of the system as defined by the customer.
+          example: ExampleSystem
+        gatewayID:
+          type: string
+          format: uuid
+          description: The ID of the gateway that connects to the charging station.
+          example: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+        applianceID:
+          type: string
+          format: uuid
+          description: ID of the charging station appliance that caused this event.
+          example: fc0a6ac7-64ce-4276-a7cd-bace946af433
+        evseID:
+          type: string
+          description: The EVSE ID of the charging station, if configured.
+          example: DE*ABC*E123456789
+        name:
+          type: string
+          description: The name of the charging station as defined by the customer.
+          example: ExampleChargingStation
+        manufacturer:
+          type: string
+          description: Manufacturer of the charging station.
+          example: ExampleManufacturer
+        model:
+          type: string
+          description: Model description of the charging station.
+          example: ExampleModel
+        serialNumber:
+          type: string
+          description: Serial number of the charging station as returned by the appliance.
+          example: "9312355"
+        firmware:
+          type: string
+          description: Firmware version of the charging station.
+        parent:
+          type: string
+          description: ID of the parent appliance, if any.
     EVUnpluggedEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
@@ -656,6 +752,26 @@ components:
               $ref: '#/components/schemas/EVUnpluggedEventData'
       description: Event fired when an EV unplugs from a charger.
     EVUnpluggedEventData:
+      description: |-
+        Payload for `ev/unplugged` events.
+
+        A plug state change can be reported by two different sources, and the payload shape differs between them.
+        Use the `type` property to tell them apart:
+
+        - `EV`: reported by a cloud-connected vehicle. Identified by `assetID`.
+        - `EVSTATION`: reported by an EV charging station connected through a gateway. Identified by
+          `applianceID` and `evseID`.
+
+        Receivers subscribed to `ev/unplugged` must be able to handle both shapes.
+      oneOf:
+        - $ref: '#/components/schemas/EVUnpluggedVehicleEventData'
+        - $ref: '#/components/schemas/EVCSUnpluggedEventData'
+      discriminator:
+        propertyName: type
+        mapping:
+          EV: '#/components/schemas/EVUnpluggedVehicleEventData'
+          EVSTATION: '#/components/schemas/EVCSUnpluggedEventData'
+    EVUnpluggedVehicleEventData:
       type: object
       description: Plug State change event (issued by the EV).
       required:
@@ -678,6 +794,8 @@ components:
             and is used to make decisions on whether to control charging behaviour
         type:
           type: string
+          enum:
+            - EV
           description: The type of the asset issuing the event.
           example: EV
         systemID:
@@ -697,6 +815,80 @@ components:
           enum:
             - UNPLUGGED
           description: State defines whether the vehicle is currently unplugged
+    EVCSUnpluggedEventData:
+      type: object
+      description: Plug State change event (reported by an EV charging station).
+      required:
+        - type
+        - gatewayID
+        - applianceID
+        - state
+      properties:
+        issuedAt:
+          type: string
+          format: date-time
+          description: |-
+            When the plug state was measured on the gateway.
+
+            This property is optional. It is omitted when the charging station did not report a measurement
+            timestamp, in which case the envelope's `time` property is the best available approximation.
+          example: "2026-06-22T07:30:00Z"
+        type:
+          type: string
+          enum:
+            - EVSTATION
+          description: The type of the appliance issuing the event.
+          example: EVSTATION
+        state:
+          type: string
+          enum:
+            - unplugged
+          description: State defines whether the vehicle is currently unplugged
+        systemID:
+          type: string
+          format: uuid
+          description: The ID of the system the charging station runs in.
+          example: c9db369e-7cf8-4ad1-ade5-46f61a5125c2
+        systemName:
+          type: string
+          description: Name of the system as defined by the customer.
+          example: ExampleSystem
+        gatewayID:
+          type: string
+          format: uuid
+          description: The ID of the gateway that connects to the charging station.
+          example: 25ccab17-cd40-4db1-a320-a986d1c15fb1
+        applianceID:
+          type: string
+          format: uuid
+          description: ID of the charging station appliance that caused this event.
+          example: fc0a6ac7-64ce-4276-a7cd-bace946af433
+        evseID:
+          type: string
+          description: The EVSE ID of the charging station, if configured.
+          example: DE*ABC*E123456789
+        name:
+          type: string
+          description: The name of the charging station as defined by the customer.
+          example: ExampleChargingStation
+        manufacturer:
+          type: string
+          description: Manufacturer of the charging station.
+          example: ExampleManufacturer
+        model:
+          type: string
+          description: Model description of the charging station.
+          example: ExampleModel
+        serialNumber:
+          type: string
+          description: Serial number of the charging station as returned by the appliance.
+          example: "9312355"
+        firmware:
+          type: string
+          description: Firmware version of the charging station.
+        parent:
+          type: string
+          description: ID of the parent appliance, if any.
     EVInfeasibleChargingGoalsEvent:
       allOf:
         - $ref: '#/components/schemas/WebhookEventBase'
